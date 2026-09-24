@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // เอกสารถูกเก็บที่ family/{docId} โดย docId คำนวณจาก SHA-256 ของ "รหัสครอบครัว"
+    // ต้องผ่าน Anonymous Auth ก่อน (เปิดใช้ใน Authentication > Sign-in method > Anonymous)
+    match /family/{docId} {
+      allow read, write: if request.auth != null;
+    }
+  }
+}

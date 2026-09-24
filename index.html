@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFF8F0">
+<meta name="description" content="สมุดสุขภาพทาโร่ - ติดตามค่าไต น้ำหนัก และอัตราการหายใจ">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="favicon-32.png" sizes="32x32">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Taro Health">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>สมุดสุขภาพทาโร่ 🐾</title>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FFF8F0; --card:#FFFFFF; --card2:#FBF3E9; --mint2:#EAF8F0;
+  --line:#F0E6D8; --ink:#2B2A28; --dim:#948B7C;
+  --mint:#8FE0B5; --mint-d:#3AAE71; --mint-ink:#1F6B45;
+  --pink:#FFD1DC; --pink-d:#FF7A9A;
+  --ok:#34C77B; --warn:#F5A623; --bad:#FF6B6B;
+  --okbg:#E4F8ED; --warnbg:#FFF3E0; --badbg:#FFEBEC;
+  --black:#232227; --shadow:0 10px 28px rgba(60,40,20,.08);
+}
+body.dark{
+  --bg:#161515; --card:#211f1e; --card2:#26231f; --mint2:#1c2a22;
+  --line:#332f2b; --ink:#F3EEE6; --dim:#a79c8c;
+  --mint:#6fd6a0; --mint-d:#3aae71; --mint-ink:#8fe0b5;
+  --pink:#e6a6b8; --pink-d:#ff7a9a;
+  --okbg:#173626; --warnbg:#3a2c14; --badbg:#3a1c1e;
+  --black:#f3eee6; --shadow:0 10px 28px rgba(0,0,0,.35);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Sarabun,system-ui,-apple-system,sans-serif;font-size:15px;-webkit-tap-highlight-color:transparent}
+.paws{background-image:radial-gradient(var(--line) 1.4px, transparent 1.4px);background-size:26px 26px}
+header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
+.avatar{width:46px;height:46px;border-radius:50%;overflow:hidden;flex:0 0 auto;border:2.5px solid #fff;box-shadow:var(--shadow);background:var(--mint2)}
+.avatar img{width:100%;height:100%;object-fit:cover}
+.hgroup{flex:1;min-width:0}
+h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:12px;color:var(--dim);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:480px){
+  h1{font-size:16px}
+  .sub{font-size:10.5px}
+  .syncbadge span:last-child{display:none}
+  .syncbadge{padding:6px 9px}
+  .headerActions{gap:6px}
+  .iconbtn{width:34px;height:34px;font-size:14px}
+}
+.wrap{max-width:1080px;margin:0 auto;padding:14px 16px 16px;display:flex;flex-direction:column;gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
+.card h2{font-size:16.5px;margin:0 0 4px;font-weight:700;display:flex;align-items:center;gap:8px}
+.card .hint{font-size:12.5px;color:var(--dim);margin-bottom:12px;line-height:1.55}
+.grid{display:grid;gap:12px}
+.kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:14px}
+.kpi .lab{font-size:12px;color:var(--dim);font-weight:600}
+.kpi .val{font-size:25px;font-weight:800;line-height:1.25;font-variant-numeric:tabular-nums}
+.kpi .del{font-size:12px;font-weight:600}
+.pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;font-weight:700}
+.p-ok{background:var(--okbg);color:var(--ok)}
+.p-warn{background:var(--warnbg);color:var(--warn)}
+.p-bad{background:var(--badbg);color:var(--bad)}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--dim);cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;transition:.15s}
+.tab.on{background:var(--black);color:var(--bg);border-color:var(--black)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+thead th{color:var(--dim);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
+tbody tr:hover{background:var(--card2)}
+.scroll{overflow-x:auto}
+input,select,button,textarea{font-family:inherit;font-size:14px}
+input,select{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;width:100%}
+input:focus,select:focus{outline:none;border-color:var(--mint-d)}
+label{font-size:12px;color:var(--dim);font-weight:600;display:block;margin-bottom:5px}
+.btn{background:var(--black);color:var(--bg);border:0;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.btn:active{transform:scale(.96)}
+.btn:disabled{opacity:.5;cursor:default;transform:none}
+.btn.mint{background:var(--mint);color:var(--mint-ink)}
+.btn.ghost{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);box-shadow:none}
+.btn.danger{background:transparent;border:1.5px solid var(--bad);color:var(--bad);padding:5px 12px;font-size:12px;box-shadow:none}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1;min-width:120px}
+svg text{font-family:Sarabun,sans-serif}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-top:8px;font-weight:600}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.alert{border-radius:20px;padding:14px 16px;font-size:13.5px;line-height:1.65;font-weight:500;display:flex;gap:10px;align-items:flex-start}
+.alert b{font-weight:800}
+.a-ok{background:var(--okbg);color:var(--mint-ink)}
+.a-warn{background:var(--warnbg);color:#8a5a0f}
+.a-bad{background:var(--badbg);color:#a3313a}
+.muted{color:var(--dim);font-size:12px}
+footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34px;line-height:1.8}
+#installBtn{display:none}
+.iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-size:16px}
+.headerActions{display:flex;gap:8px;align-items:center;margin-left:auto}
+@media print{header,.tabs,.noprint{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;border:1px solid #ccc;box-shadow:none}}
+
+/* ---------------- Heart / ATE warning card ---------------- */
+.vitalCard{background:linear-gradient(135deg,var(--badbg),var(--card));border:1px solid #ffd7db}
+.vitalList{display:grid;gap:8px;margin-top:6px}
+.vitalItem{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55}
+.vitalItem .ic{flex:0 0 auto;font-size:17px;line-height:1.3}
+.vitalItem b{font-weight:800}
+.vitalFoot{margin-top:12px;background:var(--bad);color:#fff;border-radius:14px;padding:10px 14px;font-size:12.5px;font-weight:700;line-height:1.6;text-align:center}
+
+/* ---------------- Auth / Sync ---------------- */
+.syncbadge{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);white-space:nowrap;font-weight:600;color:var(--dim)}
+.syncdot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.syncdot.on{background:var(--ok);box-shadow:0 0 0 3px var(--okbg)}
+.syncdot.busy{background:var(--warn);animation:pulse 1s infinite}
+.syncdot.off{background:var(--bad)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.modalOverlay{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-y:auto}
+.modalOverlay::before,.modalOverlay::after{content:'';position:absolute;border-radius:50%;filter:blur(2px);z-index:0;pointer-events:none}
+.modalOverlay::before{width:280px;height:280px;background:var(--pink);opacity:.35;top:-60px;left:-70px}
+.modalOverlay::after{width:220px;height:220px;background:var(--mint);opacity:.4;bottom:-40px;right:-60px}
+.modalBox{background:transparent;border-radius:0;padding:0;max-width:380px;width:100%;overflow:visible;box-shadow:none;position:relative;z-index:1}
+.modalHero{padding:16px 10px 22px;text-align:center;position:relative}
+.modalHero .blob{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 35% 30%, var(--mint) 0%, var(--mint) 100%);margin:0 auto;display:grid;place-items:center;position:relative;box-shadow:0 20px 40px rgba(58,174,113,.22)}
+.modalHero img{width:174px;height:174px;border-radius:50%;object-fit:cover;border:6px solid #fff;box-shadow:0 10px 20px rgba(0,0,0,.12)}
+.bubble{position:absolute;top:-14px;right:-6px;background:#fff;border-radius:16px 16px 4px 16px;padding:7px 14px;font-weight:800;font-size:14px;box-shadow:0 8px 18px rgba(0,0,0,.1);color:var(--ink);white-space:nowrap}
+.modalBody{padding:4px 4px 8px;text-align:center}
+.modalBody h3{margin:0 0 8px;font-size:23px;font-weight:800}
+.modalBody p{color:var(--dim);font-size:13.5px;margin:0 0 22px;line-height:1.65}
+.modalBody input{margin-bottom:10px;text-align:center;font-weight:600;letter-spacing:.5px}
+.modalBox code{background:var(--card2);padding:2px 6px;border-radius:6px;font-size:12px}
+.pinToggle{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--dim);margin:-2px 0 14px;cursor:pointer;user-select:none;font-weight:600}
+.err{color:var(--bad);font-size:12.5px;min-height:18px;margin:-4px 0 8px;text-align:center;font-weight:600}
+#appRoot{display:none}
+
+/* ---------------- RRR Recorder ---------------- */
+.recorderWrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0 4px}
+.recorderRing{position:relative;width:min(78vw, 300px);aspect-ratio:1/1;display:grid;place-items:center;touch-action:manipulation}
+.recorderRing svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
+.recorderRing circle.track{fill:none;stroke:var(--line);stroke-width:14}
+.recorderRing circle.progress{fill:none;stroke:var(--mint-d);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .18s linear, stroke .2s}
+.recBtn{position:relative;width:82%;height:82%;border-radius:50%;border:none;background:linear-gradient(160deg,var(--mint) 0%,var(--mint-d) 100%);color:var(--mint-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 14px 30px rgba(58,174,113,.28);transition:transform .12s}
+.recBtn:active{transform:scale(.95)}
+.recBtn.rec{background:linear-gradient(160deg,#ff9fb0 0%, var(--pink-d) 100%);color:#7a1330;box-shadow:0 14px 30px rgba(255,122,154,.35)}
+.recBtn .pawIcon{font-size:30px;line-height:1;margin-bottom:2px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.08))}
+.recBtn .bigCount{font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.recBtn .capLabel{font-size:13px;font-weight:700;margin-top:2px;opacity:.9}
+.recBtn.rec .bigCount{animation:tapPop .28s ease}
+@keyframes tapPop{0%{transform:scale(1.18)}100%{transform:scale(1)}}
+.durChips{display:flex;gap:8px;background:var(--card2);padding:5px;border-radius:999px;border:1px solid var(--line)}
+.durChip{padding:8px 16px;border-radius:999px;border:0;background:transparent;color:var(--dim);font-weight:700;font-size:13px;cursor:pointer}
+.durChip.on{background:var(--black);color:var(--bg)}
+.resultLine{font-size:15px;font-weight:600;color:var(--dim)}
+.resultLine b{font-size:22px;color:var(--ink);font-weight:800}
+.recActions{display:flex;gap:10px;width:100%;max-width:340px}
+.recActions .btn{flex:1}
+
+/* ---------------- OCR upload ---------------- */
+.ocrBox{background:var(--mint2);border:1.5px dashed var(--mint-d);border-radius:18px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ocrBox .ocrIcon{font-size:26px}
+.ocrBox .ocrText{flex:1;min-width:180px;font-size:12.5px;color:var(--mint-ink);line-height:1.5}
+.ocrPreviewRow{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.ocrThumb{width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid var(--line)}
+.ocrStatus{font-size:12.5px;font-weight:600;color:var(--mint-ink)}
+.ocrStatus.err{color:var(--bad)}
+.spinner{width:16px;height:16px;border:2.5px solid var(--mint-d);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ---------------- Emergency RRR popup ---------------- */
+.emOverlay{position:fixed;inset:0;background:rgba(30,5,5,.55);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+.emOverlay.show{display:flex}
+.emBox{background:var(--card);border:2px solid var(--bad);border-radius:26px;padding:28px;max-width:400px;width:100%;text-align:center;animation:emPop .25s ease;box-shadow:0 30px 60px rgba(0,0,0,.3)}
+@keyframes emPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.emIcon{font-size:50px;line-height:1;margin-bottom:6px;animation:emShake 1.2s ease infinite}
+@keyframes emShake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(6deg)}}
+.emBox h3{color:var(--bad);font-size:20px;margin:0 0 8px;font-weight:800}
+.emVal{font-size:42px;font-weight:800;color:var(--ink);margin:2px 0}
+.emVal span{font-size:15px;color:var(--dim);font-weight:600}
+.emBox .who{color:var(--dim);font-size:12px;margin-bottom:10px}
+.emBox .msg{color:var(--ink);font-size:13.5px;line-height:1.7;text-align:left;background:var(--card2);padding:14px 16px;border-radius:16px;margin:10px 0 16px}
+.emBtns{display:flex;gap:10px}
+.emBtns .btn{flex:1}
+</style>
+</head>
+<body>
+
+<!-- EMERGENCY RRR POPUP -->
+<div class="emOverlay" id="emOverlay">
+  <div class="emBox">
+    <div class="emIcon">🚨</div>
+    <h3>ค่าการหายใจสูงเกินเกณฑ์เฝ้าระวัง</h3>
+    <div class="emVal" id="emVal">– <span>ครั้ง/นาที</span></div>
+    <div class="who" id="emWho"></div>
+    <div class="msg">
+      ค่า RRR เกิน 45 ครั้ง/นาที อาจเป็นสัญญาณของ<b>ภาวะน้ำท่วมปอดกำเริบ</b><br>
+      • สังเกตเพิ่ม: หายใจอ้าปาก, เหงือกซีด/ม่วง, ซึม, ไม่กินอาหาร, ขาหลังอ่อนแรง<br>
+      • ถ้ามีอาการข้างต้นร่วมด้วย → พาไปสัตวแพทย์ฉุกเฉิน<b>ทันที</b><br>
+      • ถ้ายังปกติดี ให้นับซ้ำอีกครั้งใน 15–30 นาที เพื่อยืนยันค่า
+    </div>
+    <div class="emBtns">
+      <button class="btn ghost" onclick="dismissEmergency()">รับทราบ</button>
+      <button class="btn" style="background:var(--bad);color:#fff" onclick="dismissEmergency();document.getElementById('rrrChart').scrollIntoView({behavior:'smooth'})">ดูแนวโน้ม</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAMILY PIN GATE -->
+<div class="modalOverlay" id="authModal">
+  <div class="modalBox">
+    <div class="modalHero">
+      <div class="bubble">Meow! 🤍</div>
+      <div class="blob"><img src="hero_avatar.png" alt="ทาโร่"></div>
+    </div>
+    <div class="modalBody">
+      <h3>สมุดสุขภาพทาโร่</h3>
+      <p>ใส่ <b>รหัสครอบครัว</b> เพื่อเข้าใช้งาน — ใครก็ตามที่ใส่รหัสเดียวกันจะเห็นและบันทึกข้อมูลชุดเดียวกันได้ทันที เหมาะให้พ่อ-แม่ช่วยกันบันทึกตอนคุณไม่อยู่</p>
+      <input type="password" id="pinInput" placeholder="รหัสครอบครัว เช่น TaroCKD2026" autocomplete="off">
+      <div class="pinToggle" onclick="togglePinVisibility()">
+        <input type="checkbox" id="pinShowChk" style="width:auto;margin:0" onclick="togglePinVisibility()"> แสดงรหัส
+      </div>
+      <div class="err" id="authErr"></div>
+      <button class="btn mint" style="width:100%" id="authSubmit" onclick="doEnter()">🐾 เข้าใช้งาน</button>
+      <div class="muted" style="margin-top:16px;line-height:1.7">
+        ครั้งแรกที่ตั้งรหัสนี้ ระบบจะสร้างพื้นที่เก็บข้อมูลใหม่ให้อัตโนมัติ ใช้รหัสเดิมทุกครั้งบนทุกอุปกรณ์
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="appRoot" class="paws">
+<header>
+  <div class="avatar"><img src="cat-avatar.png" alt="ทาโร่"></div>
+  <div class="hgroup">
+    <h1>สมุดสุขภาพทาโร่ 🐾</h1>
+    <div class="sub">CKD · Heart monitoring · <span id="today"></span></div>
+  </div>
+  <div class="headerActions noprint">
+    <div class="syncbadge" id="syncBadge" title="สถานะการซิงค์"><span class="syncdot" id="syncDot"></span><span id="syncText">กำลังเชื่อมต่อ</span></div>
+    <button class="iconbtn" id="installBtn" title="ติดตั้งแอป">📲</button>
+    <button class="iconbtn" onclick="document.body.classList.toggle('dark')" title="โหมดมืด/สว่าง">🌓</button>
+    <button class="iconbtn" onclick="doLeave()" title="ออกจากอุปกรณ์นี้">🚪</button>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- KPI -->
+  <div class="grid kpis" id="kpis"></div>
+  <div id="alertBox"></div>
+
+  <!-- HEART / ATE WARNING CARD -->
+  <div class="card vitalCard">
+    <h2>❤️‍🩹 เฝ้าระวังโรคหัวใจ &amp; ลิ่มเลือดอุดตัน (ATE)</h2>
+    <div class="hint">แมวโรคไตเรื้อรัง (CKD) มีความเสี่ยงร่วมกับภาวะหัวใจโต (HCM) ซึ่งอาจนำไปสู่ภาวะลิ่มเลือดอุดตันเฉียบพลัน (Aortic Thromboembolism) ได้ — สังเกตอาการเหล่านี้ให้ไว:</div>
+    <div class="vitalList">
+      <div class="vitalItem"><span class="ic">🫁</span><div><b>หายใจลำบาก / หอบเหนื่อย</b> — หายใจถี่ อ้าปากหายใจ นอนอกไม่ยอมนอนตะแคง</div></div>
+      <div class="vitalItem"><span class="ic">💜</span><div><b>เหงือกซีดหรือคล้ำม่วง</b> — สัญญาณเลือดไปเลี้ยงไม่พอ</div></div>
+      <div class="vitalItem"><span class="ic">🦵</span><div><b>ขาหลังอ่อนแรงกะทันหัน / ลากขา / เป็นอัมพาต</b> — สัญญาณเด่นของลิ่มเลือดอุดตัน (Saddle Thrombus) มักเกิดฉับพลัน</div></div>
+      <div class="vitalItem"><span class="ic">🥶</span><div><b>อุ้งเท้าเย็นผิดปกติ</b> — คลำชีพจรขาหลังไม่ได้หรือเบากว่าปกติ</div></div>
+      <div class="vitalItem"><span class="ic">😿</span><div><b>ร้องเจ็บปวดกะทันหัน</b> — โดยเฉพาะบริเวณขาหลังหรือช่วงท้อง</div></div>
+      <div class="vitalItem"><span class="ic">😴</span><div><b>ซึมผิดปกติ เบื่ออาหาร ไม่ขยับตัว</b> — อาจเป็นสัญญาณเริ่มต้นของภาวะหัวใจล้มเหลว</div></div>
+    </div>
+    <div class="vitalFoot">⚠️ หากพบอาการเหล่านี้แม้เพียงข้อเดียว โดยเฉพาะขาหลังอ่อนแรง/เย็นผิดปกติ ให้พาไปพบสัตวแพทย์ฉุกเฉินทันที — ATE เป็นภาวะฉุกเฉินที่ต้องรักษาไวที่สุด</div>
+  </div>
+
+  <!-- RRR -->
+  <div class="card">
+    <h2>🫁 Resting Respiratory Rate</h2>
+    <div class="hint">นับขณะแมว<b>หลับสนิท/พักนิ่ง</b> · ปกติ &lt; 30 ครั้ง/นาที · เฝ้าระวัง 30–45 · ผิดปกติ &gt; 45 — นับวันละ 1–2 ครั้ง เวลาเดิมทุกวัน</div>
+
+    <div class="recorderWrap noprint">
+      <div class="recorderRing" id="recorderRing">
+        <svg viewBox="0 0 200 200">
+          <circle class="track" cx="100" cy="100" r="90"></circle>
+          <circle class="progress" id="progressCircle" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="565.5"></circle>
+        </svg>
+        <button class="recBtn" id="tapBtn">
+          <span class="pawIcon">🐾</span>
+          <span class="bigCount" id="tapCount">0</span>
+          <span class="capLabel" id="tapCapLabel">แตะทุกจังหวะหายใจ</span>
+        </button>
+      </div>
+
+      <div class="durChips" id="durChips">
+        <button class="durChip" data-v="15">15วิ×4</button>
+        <button class="durChip on" data-v="30">30วิ×2</button>
+        <button class="durChip" data-v="60">60วิ</button>
+      </div>
+
+      <div class="resultLine">ผลลัพธ์ <b id="tapRate">–</b> ครั้ง/นาที</div>
+
+      <div class="recActions">
+        <button class="btn ghost" onclick="resetTap()">↺ รีเซ็ต</button>
+        <button class="btn mint" onclick="useTap()">💾 บันทึกลงวันนี้</button>
+      </div>
+    </div>
+
+    <div class="row noprint" style="margin-top:18px">
+      <div style="flex:1.2"><label>วันที่</label><input type="date" id="rDate"></div>
+      <div><label>RRR (ครั้ง/นาที)</label><input type="number" id="rVal" min="5" max="120" placeholder="เช่น 28"></div>
+      <div style="flex:1.5"><label>บันทึกอาการ</label><input id="rNote" placeholder="เช่น ไอ / หอบ / กินยาแล้ว"></div>
+      <div style="flex:0"><button class="btn" onclick="addRRR()">บันทึก</button></div>
+    </div>
+    <div id="rrrChart" style="margin-top:14px"></div>
+    <div class="legend">
+      <span><i class="dot" style="background:var(--mint-d)"></i>RRR</span>
+      <span><i class="dot" style="background:var(--okbg);border:1px solid var(--ok)"></i>ปกติ &lt;30</span>
+      <span><i class="dot" style="background:var(--warnbg);border:1px solid var(--warn)"></i>เฝ้าระวัง 30–45</span>
+      <span><i class="dot" style="background:var(--badbg);border:1px solid var(--bad)"></i>ผิดปกติ &gt;45</span>
+      <span><i class="dot" style="background:var(--pink-d)"></i>เฉลี่ย 7 วัน</span>
+    </div>
+
+    <div class="scroll" style="margin-top:14px;max-height:230px;overflow-y:auto">
+      <table><thead><tr><th>วันที่</th><th>RRR</th><th>สถานะ</th><th>บันทึก</th><th class="noprint"></th></tr></thead><tbody id="rrrBody"></tbody></table>
+    </div>
+  </div>
+
+  <!-- LABS -->
+  <div class="card">
+    <h2>🧪 ผลเลือด – ค่าไต / ตับ</h2>
+    <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก</div>
+    <div class="tabs" id="labTabs"></div>
+    <div id="labChart"></div>
+    <div class="scroll" style="margin-top:14px">
+      <table id="labTable"></table>
+    </div>
+
+    <div class="ocrBox noprint">
+      <div class="ocrIcon">📷</div>
+      <div class="ocrText">
+        <b>อ่านค่าจากรูปผลตรวจ (OCR)</b><br>
+        ถ่ายรูปหรืออัปโหลดใบผลแล็บ ระบบจะพยายามอ่านค่า Creatinine / BUN / ALT / น้ำหนัก ให้อัตโนมัติ (กรุณาตรวจสอบความถูกต้องก่อนบันทึกเสมอ)
+      </div>
+      <button class="btn mint" onclick="document.getElementById('ocrFile').click()">เลือกรูป</button>
+      <input type="file" id="ocrFile" accept="image/*" capture="environment" style="display:none" onchange="handleOcrUpload(this)">
+      <div class="ocrPreviewRow" id="ocrPreviewRow" style="display:none">
+        <img id="ocrThumb" class="ocrThumb" alt="preview">
+        <div id="ocrStatus" class="ocrStatus"></div>
+      </div>
+    </div>
+
+    <div class="row noprint" style="margin-top:14px">
+      <div style="flex:1.2"><label>วันที่ตรวจ</label><input type="date" id="lDate"></div>
+      <div><label>น้ำหนัก (kg)</label><input type="number" step="0.01" id="l_wt"></div>
+      <div><label>Creatinine</label><input type="number" step="0.01" id="l_cre"></div>
+      <div><label>BUN</label><input type="number" step="0.1" id="l_bun"></div>
+      <div><label>ALT/GPT</label><input type="number" step="0.1" id="l_alt"></div>
+      <div style="flex:0"><button class="btn" onclick="addLab()">บันทึกผล</button></div>
+    </div>
+    <div class="muted" style="margin-top:8px">เพิ่มช่องอื่นได้ เช่น SDMA, Phosphorus, K+, PCV, ความดัน — บอกผมได้ครับ</div>
+  </div>
+
+  <!-- WEIGHT -->
+  <div class="card">
+    <h2>⚖️ น้ำหนักตัว</h2>
+    <div class="hint">น้ำหนักลดต่อเนื่อง &gt; 5% เป็นสัญญาณเตือนใน CKD · เส้นประม่วง = น้ำหนักตั้งต้น</div>
+    <div id="wtChart"></div>
+  </div>
+
+  <!-- TOOLS -->
+  <div class="card noprint">
+    <h2>💾 ข้อมูล &amp; การใช้งาน</h2>
+    <div class="hint">ข้อมูลเก็บบน Firestore ภายใต้ "รหัสครอบครัว" ของคุณ และแคชไว้ในเครื่องด้วย — แนะนำ Export เก็บสำรองเป็นระยะ</div>
+    <div class="row">
+      <div style="flex:0"><button class="btn ghost" onclick="exportJSON()">⬇️ Export JSON</button></div>
+      <div style="flex:0"><button class="btn ghost" onclick="exportCSV()">⬇️ Export CSV</button></div>
+      <div style="flex:0"><button class="btn ghost" onclick="document.getElementById('imp').click()">⬆️ Import JSON</button></div>
+      <div style="flex:0"><button class="btn ghost" onclick="window.print()">🖨️ พิมพ์ / PDF ให้หมอ</button></div>
+      <div style="flex:0"><button class="btn danger" onclick="if(confirm('ล้างข้อมูลในเครื่องนี้? (ข้อมูลบน cloud จะไม่หาย)')){localStorage.removeItem(KEY);location.reload()}">ล้างข้อมูลในเครื่อง</button></div>
+      <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
+    </div>
+  </div>
+
+  <footer>
+    เครื่องมือนี้ใช้เพื่อ<b>ติดตามแนวโน้ม</b>เท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์<br>
+    หาก RRR &gt; 45 ครั้ง/นาที ต่อเนื่อง หรือหายใจอ้าปาก/เหงือกซีดม่วง/ขาหลังอ่อนแรงเฉียบพลัน → <b>พบสัตวแพทย์ฉุกเฉินทันที</b>
+  </footer>
+</div>
+</div><!-- /appRoot -->
+
+<!-- Firebase SDK (compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+
+<!-- Tesseract.js for client-side OCR (reads lab report photos) -->
+<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
+
+<script src="app.js"></script>
+</body>
+</html>
