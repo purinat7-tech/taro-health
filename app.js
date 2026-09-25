@@ -2,11 +2,15 @@ const KEY='taro_health_v1';
 const PIN_KEY='taro_family_docid_v1';
 const EM_SEEN_KEY='taro_em_seen_v1';
 const RRR_DANGER=45;
+
+/* LABS = reference-range fields (excludes weight, which has no lo/hi and is handled specially) */
 const LABS=[
   {k:'cre',n:'Creatinine',u:'mg/dL',lo:0.4,hi:2.3},
   {k:'bun',n:'BUN',u:'mg/dL',lo:14,hi:38},
   {k:'alt',n:'ALT / GPT',u:'U/L',lo:0,hi:55}
 ];
+/* TABS = everything shown as switchable tabs in the merged chart card (weight first, per request) */
+const TABS=[{k:'wt',n:'น้ำหนัก',u:'kg',lo:null,hi:null}, ...LABS];
 
 /* ---------- Vet clinics (Rayong) ---------- */
 const VETS={
@@ -69,10 +73,14 @@ function renderVetCards(){
 /* ---------- Seed data (rrr has time "t"; labs can have optional "note") ---------- */
 const SEED={
   labs:[
-    {d:'2026-08-27',wt:4.0,cre:3.4,bun:61,alt:86,note:''},
+    {d:'2026-08-23',wt:4.8,cre:null,bun:null,alt:null,note:''},
+    {d:'2026-08-27',wt:4.0,cre:null,bun:null,alt:null,note:''},
     {d:'2026-08-31',wt:3.8,cre:2.3,bun:28,alt:36,note:''},
     {d:'2026-09-09',wt:4.2,cre:1.7,bun:24,alt:null,note:''},
-    {d:'2026-09-13',wt:4.2,cre:1.8,bun:31,alt:null,note:''}
+    {d:'2026-09-13',wt:4.2,cre:1.8,bun:31,alt:null,note:''},
+    {d:'2026-09-21',wt:4.5,cre:2.7,bun:36,alt:20,note:'ฉีดยาขับน้ำเช้านี้ก่อนเจาะเลือด'},
+    {d:'2026-09-23',wt:4.2,cre:1.6,bun:37,alt:26,note:''},
+    {d:'2026-09-25',wt:4.5,cre:null,bun:null,alt:null,note:''}
   ],
   rrr:[
     {d:'2026-09-11',t:'08:00',v:60,note:''},
@@ -92,10 +100,26 @@ document.getElementById('rDate').value=iso(Date.now());
 document.getElementById('rTime').value=nowTime();
 document.getElementById('lDate').value=iso(Date.now());
 
-const COL={mint:'#3AAE71',pink:'#FF7A9A',ok:'#34C77B',okBg:'rgba(52,199,123,.14)',warn:'#F5A623',warnBg:'rgba(245,166,35,.14)',bad:'#FF6B6B',badBg:'rgba(255,107,107,.14)',grid:'#EEE3D2',dim:'#B5A794',ink:'#2B2A28',note:'#B48CE0'};
+const COL={mint:'#3AAE71',pink:'#FF7A9A',ok:'#34C77B',okBg:'rgba(52,199,123,.14)',warn:'#F5A623',warnBg:'rgba(245,166,35,.14)',bad:'#FF6B6B',badBg:'rgba(255,107,107,.14)',grid:'#EEE3D2',dim:'#B5A794',ink:'#2B2A28',note:'#B48CE0',wt:'#F0B457'};
 
 function rrrStat(v){return v<30?['ปกติ','p-ok']:v<=45?['เฝ้าระวัง','p-warn']:['ผิดปกติ','p-bad']}
-function labStat(l,v){if(v==null)return['–','']; return v<l.lo?['ต่ำ','p-warn']:v>l.hi?['สูง','p-bad']:['ปกติ','p-ok']}
+function labStat(l,v){
+  if(v==null)return['–',''];
+  if(l.lo==null) return ['',''];  // weight: no reference-range badge
+  return v<l.lo?['ต่ำ','p-warn']:v>l.hi?['สูง','p-bad']:['ปกติ','p-ok'];
+}
+
+/* find the most recent entry that actually has a value for `field` (skips gaps) */
+function lastNonNull(field){
+  const L=DB.labs;
+  for(let i=L.length-1;i>=0;i--){ if(L[i][field]!=null) return {v:L[i][field], d:L[i].d, idx:i}; }
+  return null;
+}
+function prevNonNullBefore(field, idx){
+  const L=DB.labs;
+  for(let i=idx-1;i>=0;i--){ if(L[i][field]!=null) return L[i][field]; }
+  return null;
+}
 
 /* ---------- Emergency popup ---------- */
 function checkEmergency(fromSync){
@@ -120,7 +144,12 @@ function checkEmergency(fromSync){
 function dismissEmergency(){ document.getElementById('emOverlay').classList.remove('show'); }
 
 /* ---------- tiny SVG chart engine ---------- */
-/* opt.points item may include `note` (string). If present, draws a small purple marker + 📝 above the point. */
+/* IMPORTANT: X-position must be scaled against the TOTAL number of x-axis categories
+   (opt.points.length, i.e. every date/entry including ones with a null value for this
+   particular field), NOT just the count of non-null points. Using pts.length caused
+   later entries to be pushed off the right edge of the canvas whenever some earlier
+   dates had a null value for the selected field (e.g. Creatinine missing on some dates
+   but present on later ones) - that was the "only shows 3 points" bug. */
 function chart(el,opt){
   const W=Math.max(el.clientWidth||640,340),H=opt.h||260,P={t:26,r:16,b:34,l:44};
   const pts=opt.points.filter(p=>p.v!=null);
@@ -130,7 +159,8 @@ function chart(el,opt){
   else{ (opt.bands||[]).forEach(b=>{mn=Math.min(mn,b.lo);mx=Math.max(mx,b.hi===Infinity?mx:b.hi)}); }
   if(opt.ref){mn=Math.min(mn,opt.ref.lo);mx=Math.max(mx,opt.ref.hi)}
   const pad=(mx-mn||1)*0.14;mn=Math.max(0,mn-pad);mx=mx+pad;
-  const X=i=>P.l+(pts.length===1?(W-P.l-P.r)/2:i*(W-P.l-P.r)/(pts.length-1));
+  const total=opt.points.length;
+  const X=i=>P.l+(total===1?(W-P.l-P.r)/2:i*(W-P.l-P.r)/(total-1));
   const Y=v=>P.t+(H-P.t-P.b)*(1-(v-mn)/(mx-mn));
   let s=`<svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}">`;
   (opt.bands||[]).forEach(b=>{const hiClamped=Math.min(b.hi,mx);const y1=Y(hiClamped),y2=Y(Math.max(b.lo,mn));s+=`<rect x="${P.l}" y="${y1}" width="${W-P.l-P.r}" height="${Math.max(0,y2-y1)}" rx="8" fill="${b.c}"/>`});
@@ -138,6 +168,7 @@ function chart(el,opt){
   if(opt.hline!=null)s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(opt.hline)}" y2="${Y(opt.hline)}" stroke="${COL.pink}" stroke-dasharray="4 4" stroke-width="1.6"/>`;
   for(let i=0;i<=3;i++){const v=mn+(mx-mn)*i/3;s+=`<line x1="${P.l}" x2="${W-P.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="${COL.grid}" stroke-width=".8"/><text x="${P.l-6}" y="${Y(v)+4}" fill="${COL.dim}" font-size="10" font-weight="600" text-anchor="end">${(+v.toFixed(mx<10?1:0))}</text>`}
   if(opt.avg){const a=opt.avg.filter(p=>p.v!=null);if(a.length>1)s+=`<polyline fill="none" stroke="${COL.pink}" stroke-width="2.2" stroke-dasharray="6 4" points="${a.map(p=>X(p.i)+','+Y(p.v)).join(' ')}"/>`}
+  // draw the connecting line using only the non-null points, but positioned via the FULL-index X()
   s+=`<polyline fill="none" stroke="${opt.c||COL.mint}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" points="${pts.map((p)=>X(opt.points.indexOf(p))+','+Y(p.v)).join(' ')}"/>`;
   pts.forEach(p=>{
     const i=opt.points.indexOf(p);
@@ -154,21 +185,33 @@ function chart(el,opt){
 }
 
 /* ---------- render ---------- */
-let curLab='cre';
+let curLab='wt';
 function render(){
   DB.labs.sort((a,b)=>a.d<b.d?-1:1);
   DB.rrr.sort((a,b)=>(a.d+a.t)<(b.d+b.t)?-1:1);
-  const L=DB.labs,R=DB.rrr,last=L[L.length-1]||{},prev=L[L.length-2]||{};
+  const L=DB.labs,R=DB.rrr;
   const lr=R[R.length-1];
   const l7=R.slice(-7).map(x=>x.v),avg7=l7.length?(l7.reduce((a,b)=>a+b,0)/l7.length).toFixed(1):'–';
 
+  /* ---- KPI cards: each field independently finds its own most-recently RECORDED value,
+     so a lab visit that only logged weight (no blood draw) won't blank out Creatinine/BUN/ALT. ---- */
   const k=[];
   if(lr){const[t,c]=rrrStat(lr.v);k.push(`<div class="kpi"><div class="lab">RRR ล่าสุด (${fmtD(lr.d)} ${lr.t})</div><div class="val">${lr.v}<span style="font-size:13px;color:var(--dim);font-weight:600"> /นาที</span></div><span class="pill ${c}">${t}</span> <span class="muted">เฉลี่ย 7 ค่า ${avg7}</span></div>`)}
   else k.push(`<div class="kpi"><div class="lab">RRR ล่าสุด</div><div class="val">–</div></div>`);
-  LABS.forEach(l=>{const v=last[l.k],p=prev[l.k];const[t,c]=labStat(l,v);const d=(v!=null&&p!=null)?(v-p):null;
-    k.push(`<div class="kpi"><div class="lab">${l.n} (${l.u})</div><div class="val">${v??'–'}</div><span class="pill ${c}">${t}</span> ${d!=null?`<span class="del" style="color:${d<0?'var(--ok)':'var(--bad)'}">${d>0?'▲ +':'▼ '}${Math.abs(d).toFixed(1)}</span>`:''}</div>`)});
-  const wd=(last.wt!=null&&prev.wt!=null)?last.wt-prev.wt:null;
-  k.push(`<div class="kpi"><div class="lab">น้ำหนัก (kg)</div><div class="val">${last.wt??'–'}</div>${wd!=null?`<span class="del" style="color:${wd<0?'var(--warn)':'var(--ok)'}">${wd>0?'▲ +':'▼ '}${Math.abs(wd).toFixed(2)} kg</span>`:''}</div>`);
+
+  LABS.forEach(l=>{
+    const cur=lastNonNull(l.k);
+    const v=cur?cur.v:null;
+    const p=cur?prevNonNullBefore(l.k,cur.idx):null;
+    const[t,c]=labStat(l,v);
+    const d=(v!=null&&p!=null)?(v-p):null;
+    k.push(`<div class="kpi"><div class="lab">${l.n} (${l.u})</div><div class="val">${v??'–'}</div>${c?`<span class="pill ${c}">${t}</span>`:''} ${d!=null?`<span class="del" style="color:${d<0?'var(--ok)':'var(--bad)'}">${d>0?'▲ +':'▼ '}${Math.abs(d).toFixed(1)}</span>`:''}<div class="asof">${cur?'ล่าสุด '+fmtD(cur.d):''}</div></div>`);
+  });
+
+  const wtCur=lastNonNull('wt');
+  const wtPrev=wtCur?prevNonNullBefore('wt',wtCur.idx):null;
+  const wd=(wtCur&&wtPrev!=null)?(wtCur.v-wtPrev):null;
+  k.push(`<div class="kpi"><div class="lab">น้ำหนัก (kg)</div><div class="val">${wtCur?wtCur.v:'–'}</div>${wd!=null?`<span class="del" style="color:${wd<0?'var(--warn)':'var(--ok)'}">${wd>0?'▲ +':'▼ '}${Math.abs(wd).toFixed(2)} kg</span>`:''}<div class="asof">${wtCur?'ล่าสุด '+fmtD(wtCur.d):''}</div></div>`);
   document.getElementById('kpis').innerHTML=k.join('');
 
   const hi=R.slice(-3).filter(x=>x.v>45).length,mid=R.slice(-3).filter(x=>x.v>=30).length;
@@ -189,24 +232,30 @@ function render(){
   document.getElementById('rrrBody').innerHTML=R.slice().reverse().map(x=>{const[t,c]=rrrStat(x.v);
     return `<tr><td>${x.d}</td><td>${x.t}</td><td><b>${x.v}</b></td><td><span class="pill ${c}">${t}</span></td><td style="white-space:normal;text-align:left">${x.note||'-'}</td><td class="noprint"><button class="btn danger" onclick="delRRR('${x.d}','${x.t}')">ลบ</button></td></tr>`}).join('')||'<tr><td colspan="6" class="muted">ยังไม่มีข้อมูล</td></tr>';
 
-  document.getElementById('labTabs').innerHTML=LABS.map(l=>`<button class="tab ${l.k===curLab?'on':''}" onclick="curLab='${l.k}';render()">${l.n}</button>`).join('');
-  const l=LABS.find(x=>x.k===curLab);
-  chart(document.getElementById('labChart'),{h:270,c:COL.mint,ref:{lo:l.lo,hi:l.hi},
-    points:L.map((x,i)=>({i,v:x[l.k]??null,l:fmtD(x.d),note:x.note||null,c:x[l.k]==null?COL.dim:(x[l.k]>l.hi||x[l.k]<l.lo)?COL.bad:COL.ok})),
-    bands:[{lo:l.lo,hi:l.hi,c:COL.okBg}]});
+  /* ---- Merged tab chart: น้ำหนัก / Creatinine / BUN / ALT-GPT ---- */
+  document.getElementById('labTabs').innerHTML=TABS.map(l=>`<button class="tab ${l.k===curLab?'on':''}" onclick="curLab='${l.k}';render()">${l.n}</button>`).join('');
+  const l=TABS.find(x=>x.k===curLab)||TABS[0];
+  if(l.k==='wt'){
+    const baseRec=L.find(x=>x.wt!=null);
+    chart(document.getElementById('labChart'),{
+      h:270,c:COL.wt,
+      hline: baseRec?baseRec.wt:null,
+      points:L.map((x,i)=>({i,v:x.wt??null,l:fmtD(x.d),note:x.note||null,c:x.wt==null?COL.dim:COL.wt}))
+    });
+  }else{
+    chart(document.getElementById('labChart'),{h:270,c:COL.mint,ref:{lo:l.lo,hi:l.hi},
+      points:L.map((x,i)=>({i,v:x[l.k]??null,l:fmtD(x.d),note:x.note||null,c:x[l.k]==null?COL.dim:(x[l.k]>l.hi||x[l.k]<l.lo)?COL.bad:COL.ok})),
+      bands:[{lo:l.lo,hi:l.hi,c:COL.okBg}]});
+  }
 
   let th=`<thead><tr><th>รายการ</th><th>Lower</th><th>Upper</th>${L.map(x=>`<th>${fmtD(x.d)}</th>`).join('')}<th class="noprint"></th></tr></thead><tbody>`;
   th+=`<tr><td>น้ำหนัก (kg)</td><td>-</td><td>-</td>${L.map(x=>`<td>${x.wt??'-'}</td>`).join('')}<td class="noprint"></td></tr>`;
-  LABS.forEach(li=>{th+=`<tr><td>${li.n}</td><td>${li.lo}</td><td>${li.hi}</td>${L.map(x=>{const v=x[li.k];const[t,c]=labStat(li,v);return `<td>${v??'-'} ${v!=null&&c!=='p-ok'?`<span class="pill ${c}">${t}</span>`:''}</td>`}).join('')}<td class="noprint"></td></tr>`});
-  // Notes row: shows per-date event notes (e.g. diuretic injection) so lab spikes can be explained
+  LABS.forEach(li=>{th+=`<tr><td>${li.n}</td><td>${li.lo}</td><td>${li.hi}</td>${L.map(x=>{const v=x[li.k];const[t,c]=labStat(li,v);const showPill=v!=null&&(c==='p-warn'||c==='p-bad');return `<td>${v??'-'} ${showPill?`<span class="pill ${c}">${t}</span>`:''}</td>`}).join('')}<td class="noprint"></td></tr>`});
   if(L.some(x=>x.note)){
     th+=`<tr class="noteRow"><td>📝 หมายเหตุ</td><td></td><td></td>${L.map(x=>`<td>${x.note?('<span title="'+x.note.replace(/"/g,'&quot;')+'">'+x.note+'</span>'):'-'}</td>`).join('')}<td class="noprint"></td></tr>`;
   }
-  th+=`<tr class="noprint"><td colspan="3"></td>${L.map(x=>`<td><button class="btn danger" onclick="delLab('${x.d}')">ลบ</button></td>`).join('')}<td></td></tr></tbody>`;
+  th+=`<tr class="noprint"><td colspan="3"></td>${L.map(x=>`<td><div class="rowActions"><button class="btn editbtn sm" onclick="editLab('${x.d}')">แก้ไข</button><button class="btn danger" onclick="delLab('${x.d}')">ลบ</button></div></td>`).join('')}<td></td></tr></tbody>`;
   document.getElementById('labTable').innerHTML=th;
-
-  const wp=L.map((x,i)=>({i,v:x.wt??null,l:fmtD(x.d)}));
-  chart(document.getElementById('wtChart'),{points:wp,h:230,c:'#F0B457',hline:L[0]?L[0].wt:null});
 }
 
 /* ---------- actions ---------- */
@@ -220,13 +269,42 @@ function addRRR(){
   save();render();checkEmergency(false);
 }
 function delRRR(d,t){DB.rrr=DB.rrr.filter(x=>!(x.d===d&&x.t===t));save();render()}
+
+let editingLabDate=null;
 function addLab(){
   const d=lDate.value;if(!d)return alert('เลือกวันที่');
   const g=id=>document.getElementById(id).value===''?null:+document.getElementById(id).value;
   const o={d,wt:g('l_wt'),cre:g('l_cre'),bun:g('l_bun'),alt:g('l_alt'),note:document.getElementById('l_note').value.trim()};
   const i=DB.labs.findIndex(x=>x.d===d);i>=0?DB.labs[i]=Object.assign({},DB.labs[i],o):DB.labs.push(o);
-  ['l_wt','l_cre','l_bun','l_alt','l_note'].forEach(x=>document.getElementById(x).value='');save();render()}
+  ['l_wt','l_cre','l_bun','l_alt','l_note'].forEach(x=>document.getElementById(x).value='');
+  cancelEditLab(false);
+  save();render();
+}
 function delLab(d){if(!confirm('ลบผลตรวจวันที่ '+d+'?'))return;DB.labs=DB.labs.filter(x=>x.d!==d);save();render()}
+
+function editLab(d){
+  const rec=DB.labs.find(x=>x.d===d);
+  if(!rec)return;
+  editingLabDate=d;
+  document.getElementById('lDate').value=rec.d;
+  document.getElementById('l_wt').value=rec.wt??'';
+  document.getElementById('l_cre').value=rec.cre??'';
+  document.getElementById('l_bun').value=rec.bun??'';
+  document.getElementById('l_alt').value=rec.alt??'';
+  document.getElementById('l_note').value=rec.note||'';
+  document.getElementById('labSubmitBtn').textContent='💾 บันทึกการแก้ไข';
+  document.getElementById('labCancelEditBtn').style.display='inline-flex';
+  document.getElementById('labFormArea').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function cancelEditLab(resetDate){
+  editingLabDate=null;
+  document.getElementById('labSubmitBtn').textContent='บันทึกผล';
+  document.getElementById('labCancelEditBtn').style.display='none';
+  if(resetDate!==false){
+    ['l_wt','l_cre','l_bun','l_alt','l_note'].forEach(x=>document.getElementById(x).value='');
+    document.getElementById('lDate').value=iso(Date.now());
+  }
+}
 
 /* ---------- Recorder (big tap button + progress ring) ---------- */
 let recDur=30, taps=0, t0=null, tick=null;

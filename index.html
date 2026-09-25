@@ -22,6 +22,7 @@
   --ok:#34C77B; --warn:#F5A623; --bad:#FF6B6B;
   --okbg:#E4F8ED; --warnbg:#FFF3E0; --badbg:#FFEBEC;
   --note:#B48CE0; --notebg:#F1E9FB;
+  --wt:#F0B457; --wtbg:#FFF3DC;
   --black:#232227; --shadow:0 10px 28px rgba(60,40,20,.08);
 }
 body.dark{
@@ -31,6 +32,7 @@ body.dark{
   --pink:#e6a6b8; --pink-d:#ff7a9a;
   --okbg:#173626; --warnbg:#3a2c14; --badbg:#3a1c1e;
   --note:#c9a8ec; --notebg:#2a2136;
+  --wt:#e0ab5c; --wtbg:#3a2c14;
   --black:#f3eee6; --shadow:0 10px 28px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
@@ -60,6 +62,7 @@ h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px;white-space:nowra
 .kpi .lab{font-size:12px;color:var(--dim);font-weight:600}
 .kpi .val{font-size:25px;font-weight:800;line-height:1.25;font-variant-numeric:tabular-nums}
 .kpi .del{font-size:12px;font-weight:600}
+.kpi .asof{font-size:10.5px;color:var(--dim);margin-top:2px;font-weight:600}
 .pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;font-weight:700}
 .p-ok{background:var(--okbg);color:var(--ok)}
 .p-warn{background:var(--warnbg);color:var(--warn)}
@@ -84,8 +87,10 @@ label{font-size:12px;color:var(--dim);font-weight:600;display:block;margin-botto
 .btn.mint{background:var(--mint);color:var(--mint-ink)}
 .btn.ghost{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);box-shadow:none}
 .btn.danger{background:transparent;border:1.5px solid var(--bad);color:var(--bad);padding:5px 12px;font-size:12px;box-shadow:none}
+.btn.editbtn{background:transparent;border:1.5px solid var(--note);color:var(--note);padding:5px 12px;font-size:12px;box-shadow:none}
 .btn.bad{background:var(--bad);color:#fff}
-.btn.note{background:var(--note);color:#fff}
+.btn.sm{padding:5px 12px;font-size:12px;box-shadow:none}
+.rowActions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
 
 /* ---------- Form rows: robust mobile-first stacking (fixes overlap on iPhone) ---------- */
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
@@ -353,10 +358,10 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
     </div>
   </div>
 
-  <!-- LABS -->
+  <!-- LABS (weight merged in as a tab) -->
   <div class="card">
-    <h2>🧪 ผลเลือด – ค่าไต / ตับ</h2>
-    <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก · ไอคอน 📝 ในกราฟ = มีบันทึกเหตุการณ์วันนั้น (เช่น ฉีดยาขับน้ำ)</div>
+    <h2>🧪 ผลตรวจ – น้ำหนัก / ค่าไต / ตับ</h2>
+    <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก · ไอคอน 📝 ในกราฟ = มีบันทึกเหตุการณ์วันนั้น (เช่น ฉีดยาขับน้ำ) · กราฟแสดงทุกครั้งที่มีการบันทึกทั้งหมด</div>
     <div class="tabs" id="labTabs"></div>
     <div id="labChart"></div>
     <div class="scroll" style="margin-top:14px">
@@ -377,7 +382,7 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
       </div>
     </div>
 
-    <div class="row noprint" style="margin-top:14px">
+    <div class="row noprint" id="labFormArea" style="margin-top:14px">
       <div><label>วันที่ตรวจ</label><input type="date" id="lDate"></div>
       <div><label>น้ำหนัก (kg)</label><input type="number" step="0.01" id="l_wt"></div>
       <div><label>Creatinine</label><input type="number" step="0.01" id="l_cre"></div>
@@ -389,16 +394,12 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
         <label>📝 หมายเหตุวันนี้ (เช่น ฉีดยาขับน้ำ, งดน้ำก่อนเจาะเลือด, ปรับยา)</label>
         <input id="l_note" placeholder="เช่น ฉีด Lasix เช้านี้ก่อนเจาะเลือด">
       </div>
-      <div style="flex:0 0 auto"><button class="btn" onclick="addLab()">บันทึกผล</button></div>
+      <div style="flex:0 0 auto;display:flex;gap:8px">
+        <button class="btn ghost" id="labCancelEditBtn" style="display:none" onclick="cancelEditLab()">ยกเลิกแก้ไข</button>
+        <button class="btn" id="labSubmitBtn" onclick="addLab()">บันทึกผล</button>
+      </div>
     </div>
     <div class="muted" style="margin-top:8px">เพิ่มช่องอื่นได้ เช่น SDMA, Phosphorus, K+, PCV, ความดัน — บอกผมได้ครับ</div>
-  </div>
-
-  <!-- WEIGHT -->
-  <div class="card">
-    <h2>⚖️ น้ำหนักตัว</h2>
-    <div class="hint">น้ำหนักลดต่อเนื่อง &gt; 5% เป็นสัญญาณเตือนใน CKD · เส้นประม่วง = น้ำหนักตั้งต้น</div>
-    <div id="wtChart"></div>
   </div>
 
   <!-- TOOLS -->
