@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#FFF8F0">
 <meta name="description" content="สมุดสุขภาพทาโร่ - ติดตามค่าไต น้ำหนัก และอัตราการหายใจ">
 <link rel="manifest" href="manifest.json">
@@ -21,6 +21,7 @@
   --pink:#FFD1DC; --pink-d:#FF7A9A;
   --ok:#34C77B; --warn:#F5A623; --bad:#FF6B6B;
   --okbg:#E4F8ED; --warnbg:#FFF3E0; --badbg:#FFEBEC;
+  --note:#B48CE0; --notebg:#F1E9FB;
   --black:#232227; --shadow:0 10px 28px rgba(60,40,20,.08);
 }
 body.dark{
@@ -29,6 +30,7 @@ body.dark{
   --mint:#6fd6a0; --mint-d:#3aae71; --mint-ink:#8fe0b5;
   --pink:#e6a6b8; --pink-d:#ff7a9a;
   --okbg:#173626; --warnbg:#3a2c14; --badbg:#3a1c1e;
+  --note:#c9a8ec; --notebg:#2a2136;
   --black:#f3eee6; --shadow:0 10px 28px rgba(0,0,0,.35);
 }
 *{box-sizing:border-box}
@@ -54,7 +56,7 @@ h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px;white-space:nowra
 .card .hint{font-size:12.5px;color:var(--dim);margin-bottom:12px;line-height:1.55}
 .grid{display:grid;gap:12px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.kpi{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:14px}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:14px;min-width:0}
 .kpi .lab{font-size:12px;color:var(--dim);font-weight:600}
 .kpi .val{font-size:25px;font-weight:800;line-height:1.25;font-variant-numeric:tabular-nums}
 .kpi .del{font-size:12px;font-weight:600}
@@ -70,19 +72,30 @@ th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:center;whit
 th:first-child,td:first-child{text-align:left}
 thead th{color:var(--dim);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
 tbody tr:hover{background:var(--card2)}
+tr.noteRow td{white-space:normal;text-align:left;font-size:11.5px;color:var(--note);background:var(--notebg);padding-top:5px;padding-bottom:5px}
 .scroll{overflow-x:auto}
 input,select,button,textarea{font-family:inherit;font-size:14px}
-input,select{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;width:100%}
+input,select{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;width:100%;min-width:0}
 input:focus,select:focus{outline:none;border-color:var(--mint-d)}
 label{font-size:12px;color:var(--dim);font-weight:600;display:block;margin-bottom:5px}
-.btn{background:var(--black);color:var(--bg);border:0;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.btn{background:var(--black);color:var(--bg);border:0;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.12);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:active{transform:scale(.96)}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
 .btn.mint{background:var(--mint);color:var(--mint-ink)}
 .btn.ghost{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);box-shadow:none}
 .btn.danger{background:transparent;border:1.5px solid var(--bad);color:var(--bad);padding:5px 12px;font-size:12px;box-shadow:none}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end}
-.row>div{flex:1;min-width:120px}
+.btn.bad{background:var(--bad);color:#fff}
+.btn.note{background:var(--note);color:#fff}
+
+/* ---------- Form rows: robust mobile-first stacking (fixes overlap on iPhone) ---------- */
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+.row>div{flex:1 1 160px;min-width:0}
+@media (max-width:640px){
+  .row{flex-direction:column;align-items:stretch;gap:12px}
+  .row>div{flex:1 1 auto;width:100%}
+  .row > div[style*="flex:0"]{width:100%}
+  .row .btn{width:100%}
+}
 svg text{font-family:Sarabun,sans-serif}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-top:8px;font-weight:600}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
@@ -105,6 +118,20 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 .vitalItem .ic{flex:0 0 auto;font-size:17px;line-height:1.3}
 .vitalItem b{font-weight:800}
 .vitalFoot{margin-top:12px;background:var(--bad);color:#fff;border-radius:14px;padding:10px 14px;font-size:12.5px;font-weight:700;line-height:1.6;text-align:center}
+
+/* ---------------- Vet clinic navigation card ---------------- */
+.vetCard{display:flex;flex-direction:column;gap:10px;border-radius:20px;padding:14px;border:1.5px solid var(--line);background:var(--card2)}
+.vetCard.active{border-color:var(--mint-d);background:var(--okbg)}
+.vetCard .vTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
+.vetCard .vName{font-weight:800;font-size:14.5px}
+.vetCard .vHours{font-size:11.5px;color:var(--dim);font-weight:600;margin-top:2px}
+.vetCard .vAddr{font-size:12px;color:var(--dim);line-height:1.5;margin:2px 0 4px}
+.vBadge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.vBadge.open{background:var(--okbg);color:var(--mint-ink)}
+.vBadge.closed{background:var(--badbg);color:#a3313a}
+.vetActions{display:flex;gap:8px;flex-wrap:wrap}
+.vetActions .btn{flex:1;min-width:120px;font-size:13px;padding:9px 14px}
+.vetNote{font-size:12px;font-weight:700;color:var(--bad);background:var(--badbg);border-radius:12px;padding:8px 12px;text-align:center;margin-top:2px}
 
 /* ---------------- Auth / Sync ---------------- */
 .syncbadge{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);white-space:nowrap;font-weight:600;color:var(--dim)}
@@ -167,7 +194,7 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 /* ---------------- Emergency RRR popup ---------------- */
 .emOverlay{position:fixed;inset:0;background:rgba(30,5,5,.55);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
 .emOverlay.show{display:flex}
-.emBox{background:var(--card);border:2px solid var(--bad);border-radius:26px;padding:28px;max-width:400px;width:100%;text-align:center;animation:emPop .25s ease;box-shadow:0 30px 60px rgba(0,0,0,.3)}
+.emBox{background:var(--card);border:2px solid var(--bad);border-radius:26px;padding:26px;max-width:420px;width:100%;text-align:center;animation:emPop .25s ease;box-shadow:0 30px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
 @keyframes emPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
 .emIcon{font-size:50px;line-height:1;margin-bottom:6px;animation:emShake 1.2s ease infinite}
 @keyframes emShake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(6deg)}}
@@ -175,7 +202,11 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 .emVal{font-size:42px;font-weight:800;color:var(--ink);margin:2px 0}
 .emVal span{font-size:15px;color:var(--dim);font-weight:600}
 .emBox .who{color:var(--dim);font-size:12px;margin-bottom:10px}
-.emBox .msg{color:var(--ink);font-size:13.5px;line-height:1.7;text-align:left;background:var(--card2);padding:14px 16px;border-radius:16px;margin:10px 0 16px}
+.emBox .msg{color:var(--ink);font-size:13.5px;line-height:1.7;text-align:left;background:var(--card2);padding:14px 16px;border-radius:16px;margin:10px 0 14px}
+.emVetBox{background:var(--badbg);border-radius:16px;padding:12px 14px;text-align:left;margin-bottom:14px}
+.emVetBox .vLabel{font-size:11px;font-weight:800;color:#a3313a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.emVetBox .vName{font-weight:800;font-size:14px;margin-bottom:2px}
+.emVetBox .vSub{font-size:11.5px;color:var(--dim);margin-bottom:8px}
 .emBtns{display:flex;gap:10px}
 .emBtns .btn{flex:1}
 </style>
@@ -195,9 +226,10 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
       • ถ้ามีอาการข้างต้นร่วมด้วย → พาไปสัตวแพทย์ฉุกเฉิน<b>ทันที</b><br>
       • ถ้ายังปกติดี ให้นับซ้ำอีกครั้งใน 15–30 นาที เพื่อยืนยันค่า
     </div>
+    <div class="emVetBox" id="emVetBox"></div>
     <div class="emBtns">
       <button class="btn ghost" onclick="dismissEmergency()">รับทราบ</button>
-      <button class="btn" style="background:var(--bad);color:#fff" onclick="dismissEmergency();document.getElementById('rrrChart').scrollIntoView({behavior:'smooth'})">ดูแนวโน้ม</button>
+      <button class="btn bad" id="emNavBtn" onclick="dismissEmergency()">🗺️ เปิดแผนที่</button>
     </div>
   </div>
 </div>
@@ -246,6 +278,13 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
   <div class="grid kpis" id="kpis"></div>
   <div id="alertBox"></div>
 
+  <!-- VET CLINIC NAVIGATION -->
+  <div class="card">
+    <h2>📍 คลินิก &amp; โรงพยาบาลสัตว์ใกล้บ้าน</h2>
+    <div class="hint">ระบบจะบอกอัตโนมัติว่าตอนนี้อยู่ในเวลาเปิดของคลินิกประจำไหม ถ้านอกเวลา/ดึก จะแนะนำให้ไปโรงพยาบาลสัตว์ที่เปิด 24 ชม. แทน</div>
+    <div class="grid" id="vetCards" style="gap:12px"></div>
+  </div>
+
   <!-- HEART / ATE WARNING CARD -->
   <div class="card vitalCard">
     <h2>❤️‍🩹 เฝ้าระวังโรคหัวใจ &amp; ลิ่มเลือดอุดตัน (ATE)</h2>
@@ -264,7 +303,7 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
   <!-- RRR -->
   <div class="card">
     <h2>🫁 Resting Respiratory Rate</h2>
-    <div class="hint">นับขณะแมว<b>หลับสนิท/พักนิ่ง</b> · ปกติ &lt; 30 ครั้ง/นาที · เฝ้าระวัง 30–45 · ผิดปกติ &gt; 45 — นับวันละ 1–2 ครั้ง เวลาเดิมทุกวัน</div>
+    <div class="hint">นับขณะแมว<b>หลับสนิท/พักนิ่ง</b> · ปกติ &lt; 30 ครั้ง/นาที · เฝ้าระวัง 30–45 · ผิดปกติ &gt; 45 — นับ<b>เช้า+เย็น</b>ทุกวัน เวลาใกล้เคียงเดิม</div>
 
     <div class="recorderWrap noprint">
       <div class="recorderRing" id="recorderRing">
@@ -289,15 +328,16 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 
       <div class="recActions">
         <button class="btn ghost" onclick="resetTap()">↺ รีเซ็ต</button>
-        <button class="btn mint" onclick="useTap()">💾 บันทึกลงวันนี้</button>
+        <button class="btn mint" onclick="useTap()">💾 บันทึกลงตอนนี้</button>
       </div>
     </div>
 
     <div class="row noprint" style="margin-top:18px">
-      <div style="flex:1.2"><label>วันที่</label><input type="date" id="rDate"></div>
+      <div><label>วันที่</label><input type="date" id="rDate"></div>
+      <div><label>เวลา</label><input type="time" id="rTime"></div>
       <div><label>RRR (ครั้ง/นาที)</label><input type="number" id="rVal" min="5" max="120" placeholder="เช่น 28"></div>
-      <div style="flex:1.5"><label>บันทึกอาการ</label><input id="rNote" placeholder="เช่น ไอ / หอบ / กินยาแล้ว"></div>
-      <div style="flex:0"><button class="btn" onclick="addRRR()">บันทึก</button></div>
+      <div style="flex:1.5 1 220px"><label>บันทึกอาการ</label><input id="rNote" placeholder="เช่น ไอ / หอบ / กินยาแล้ว"></div>
+      <div style="flex:0 0 auto"><button class="btn" onclick="addRRR()">บันทึก</button></div>
     </div>
     <div id="rrrChart" style="margin-top:14px"></div>
     <div class="legend">
@@ -308,15 +348,15 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
       <span><i class="dot" style="background:var(--pink-d)"></i>เฉลี่ย 7 วัน</span>
     </div>
 
-    <div class="scroll" style="margin-top:14px;max-height:230px;overflow-y:auto">
-      <table><thead><tr><th>วันที่</th><th>RRR</th><th>สถานะ</th><th>บันทึก</th><th class="noprint"></th></tr></thead><tbody id="rrrBody"></tbody></table>
+    <div class="scroll" style="margin-top:14px;max-height:280px;overflow-y:auto">
+      <table><thead><tr><th>วันที่</th><th>เวลา</th><th>RRR</th><th>สถานะ</th><th>บันทึก</th><th class="noprint"></th></tr></thead><tbody id="rrrBody"></tbody></table>
     </div>
   </div>
 
   <!-- LABS -->
   <div class="card">
     <h2>🧪 ผลเลือด – ค่าไต / ตับ</h2>
-    <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก</div>
+    <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก · ไอคอน 📝 ในกราฟ = มีบันทึกเหตุการณ์วันนั้น (เช่น ฉีดยาขับน้ำ)</div>
     <div class="tabs" id="labTabs"></div>
     <div id="labChart"></div>
     <div class="scroll" style="margin-top:14px">
@@ -338,12 +378,18 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
     </div>
 
     <div class="row noprint" style="margin-top:14px">
-      <div style="flex:1.2"><label>วันที่ตรวจ</label><input type="date" id="lDate"></div>
+      <div><label>วันที่ตรวจ</label><input type="date" id="lDate"></div>
       <div><label>น้ำหนัก (kg)</label><input type="number" step="0.01" id="l_wt"></div>
       <div><label>Creatinine</label><input type="number" step="0.01" id="l_cre"></div>
       <div><label>BUN</label><input type="number" step="0.1" id="l_bun"></div>
       <div><label>ALT/GPT</label><input type="number" step="0.1" id="l_alt"></div>
-      <div style="flex:0"><button class="btn" onclick="addLab()">บันทึกผล</button></div>
+    </div>
+    <div class="row noprint" style="margin-top:10px">
+      <div style="flex:2 1 260px">
+        <label>📝 หมายเหตุวันนี้ (เช่น ฉีดยาขับน้ำ, งดน้ำก่อนเจาะเลือด, ปรับยา)</label>
+        <input id="l_note" placeholder="เช่น ฉีด Lasix เช้านี้ก่อนเจาะเลือด">
+      </div>
+      <div style="flex:0 0 auto"><button class="btn" onclick="addLab()">บันทึกผล</button></div>
     </div>
     <div class="muted" style="margin-top:8px">เพิ่มช่องอื่นได้ เช่น SDMA, Phosphorus, K+, PCV, ความดัน — บอกผมได้ครับ</div>
   </div>
@@ -360,11 +406,11 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
     <h2>💾 ข้อมูล &amp; การใช้งาน</h2>
     <div class="hint">ข้อมูลเก็บบน Firestore ภายใต้ "รหัสครอบครัว" ของคุณ และแคชไว้ในเครื่องด้วย — แนะนำ Export เก็บสำรองเป็นระยะ</div>
     <div class="row">
-      <div style="flex:0"><button class="btn ghost" onclick="exportJSON()">⬇️ Export JSON</button></div>
-      <div style="flex:0"><button class="btn ghost" onclick="exportCSV()">⬇️ Export CSV</button></div>
-      <div style="flex:0"><button class="btn ghost" onclick="document.getElementById('imp').click()">⬆️ Import JSON</button></div>
-      <div style="flex:0"><button class="btn ghost" onclick="window.print()">🖨️ พิมพ์ / PDF ให้หมอ</button></div>
-      <div style="flex:0"><button class="btn danger" onclick="if(confirm('ล้างข้อมูลในเครื่องนี้? (ข้อมูลบน cloud จะไม่หาย)')){localStorage.removeItem(KEY);location.reload()}">ล้างข้อมูลในเครื่อง</button></div>
+      <div style="flex:0 0 auto"><button class="btn ghost" onclick="exportJSON()">⬇️ Export JSON</button></div>
+      <div style="flex:0 0 auto"><button class="btn ghost" onclick="exportCSV()">⬇️ Export CSV</button></div>
+      <div style="flex:0 0 auto"><button class="btn ghost" onclick="document.getElementById('imp').click()">⬆️ Import JSON</button></div>
+      <div style="flex:0 0 auto"><button class="btn ghost" onclick="window.print()">🖨️ พิมพ์ / PDF ให้หมอ</button></div>
+      <div style="flex:0 0 auto"><button class="btn danger" onclick="if(confirm('ล้างข้อมูลในเครื่องนี้? (ข้อมูลบน cloud จะไม่หาย)')){localStorage.removeItem(KEY);location.reload()}">ล้างข้อมูลในเครื่อง</button></div>
       <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
     </div>
   </div>

@@ -1,4 +1,4 @@
-const CACHE = 'taro-health-v6';
+const CACHE = 'taro-health-v8';
 const FILES = ['./', './index.html', './app.js', './manifest.json',
   './icon-192.png', './icon-512.png', './icon-192-maskable.png', './icon-512-maskable.png',
   './apple-touch-icon.png', './favicon-32.png', './cat-avatar.png', './hero_avatar.png',
@@ -16,8 +16,6 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Network-first สำหรับหน้า HTML (กันปัญหาแคชค้างเวอร์ชันเก่า)
-// Cache-first สำหรับไฟล์ static อื่นๆ (โหลดเร็ว + ใช้ offline ได้)
 self.addEventListener('fetch', e => {
   const isHTML = e.request.mode === 'navigate' || e.request.destination === 'document';
   if (isHTML) {
@@ -27,8 +25,6 @@ self.addEventListener('fetch', e => {
         .catch(() => caches.match(e.request).then(r => r || caches.match('./index.html')))
     );
   } else {
-    e.respondWith(
-      caches.match(e.request).then(res => res || fetch(e.request))
-    );
+    e.respondWith(caches.match(e.request).then(res => res || fetch(e.request)));
   }
 });
