@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#FFF8F0">
-<meta name="description" content="สมุดสุขภาพทาโร่ - ติดตามค่าไต น้ำหนัก และอัตราการหายใจ">
+<meta name="description" content="สมุดสุขภาพทาโร่ - ติดตามค่าไต หัวใจ น้ำหนัก และอัตราการหายใจ">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon-32.png" sizes="32x32">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -78,8 +78,9 @@ tbody tr:hover{background:var(--card2)}
 tr.noteRow td{white-space:normal;text-align:left;font-size:11.5px;color:var(--note);background:var(--notebg);padding-top:5px;padding-bottom:5px}
 .scroll{overflow-x:auto}
 input,select,button,textarea{font-family:inherit;font-size:14px}
-input,select{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;width:100%;min-width:0}
-input:focus,select:focus{outline:none;border-color:var(--mint-d)}
+input,select,textarea{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--mint-d)}
+textarea{resize:vertical;line-height:1.5}
 label{font-size:12px;color:var(--dim);font-weight:600;display:block;margin-bottom:5px}
 .btn{background:var(--black);color:var(--bg);border:0;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.12);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:active{transform:scale(.96)}
@@ -114,7 +115,7 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 #installBtn{display:none}
 .iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-size:16px}
 .headerActions{display:flex;gap:8px;align-items:center;margin-left:auto}
-@media print{header,.tabs,.noprint{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;border:1px solid #ccc;box-shadow:none}}
+@media print{header,.tabs,.noprint{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;border:1px solid #ccc;box-shadow:none}.echoText{max-height:none!important;overflow:visible!important}}
 
 /* ---------------- Heart / ATE warning card ---------------- */
 .vitalCard{background:linear-gradient(135deg,var(--badbg),var(--card));border:1px solid #ffd7db}
@@ -137,6 +138,18 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 .vetActions{display:flex;gap:8px;flex-wrap:wrap}
 .vetActions .btn{flex:1;min-width:120px;font-size:13px;padding:9px 14px}
 .vetNote{font-size:12px;font-weight:700;color:var(--bad);background:var(--badbg);border-radius:12px;padding:8px 12px;text-align:center;margin-top:2px}
+
+/* ---------------- Echo history card ---------------- */
+.echoCard{border:1.5px solid var(--line);background:var(--card2);border-radius:20px;padding:14px}
+.echoDate{font-weight:800;font-size:14.5px}
+.echoMetrics{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.echoFuncNote{margin-top:9px;font-size:12.5px;color:#8a5a0f;background:var(--warnbg);padding:9px 12px;border-radius:12px;line-height:1.55}
+.echoDetails{margin-top:9px;border:1px solid var(--line);border-radius:14px;padding:10px 13px;background:var(--card)}
+.echoDetails summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--note);list-style:none}
+.echoDetails summary::-webkit-details-marker{display:none}
+.echoDetails summary::before{content:'▸ ';display:inline-block;transition:.15s}
+.echoDetails[open] summary::before{content:'▾ '}
+.echoText{white-space:pre-wrap;font-size:12.5px;color:var(--ink);line-height:1.65;margin-top:9px;max-height:280px;overflow-y:auto;font-family:inherit}
 
 /* ---------------- Auth / Sync ---------------- */
 .syncbadge{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);white-space:nowrap;font-weight:600;color:var(--dim)}
@@ -293,6 +306,7 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
   <!-- HEART / ATE WARNING CARD -->
   <div class="card vitalCard">
     <h2>❤️‍🩹 เฝ้าระวังโรคหัวใจ &amp; ลิ่มเลือดอุดตัน (ATE)</h2>
+    <div id="ateStatusBanner"></div>
     <div class="hint">แมวโรคไตเรื้อรัง (CKD) มีความเสี่ยงร่วมกับภาวะหัวใจโต (HCM) ซึ่งอาจนำไปสู่ภาวะลิ่มเลือดอุดตันเฉียบพลัน (Aortic Thromboembolism) ได้ — สังเกตอาการเหล่านี้ให้ไว:</div>
     <div class="vitalList">
       <div class="vitalItem"><span class="ic">🫁</span><div><b>หายใจลำบาก / หอบเหนื่อย</b> — หายใจถี่ อ้าปากหายใจ นอนอกไม่ยอมนอนตะแคง</div></div>
@@ -303,6 +317,121 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
       <div class="vitalItem"><span class="ic">😴</span><div><b>ซึมผิดปกติ เบื่ออาหาร ไม่ขยับตัว</b> — อาจเป็นสัญญาณเริ่มต้นของภาวะหัวใจล้มเหลว</div></div>
     </div>
     <div class="vitalFoot">⚠️ หากพบอาการเหล่านี้แม้เพียงข้อเดียว โดยเฉพาะขาหลังอ่อนแรง/เย็นผิดปกติ ให้พาไปพบสัตวแพทย์ฉุกเฉินทันที — ATE เป็นภาวะฉุกเฉินที่ต้องรักษาไวที่สุด</div>
+  </div>
+
+  <!-- ECHO HISTORY CARD -->
+  <div class="card" id="echoCardSection">
+    <h2>🫀 ประวัติ Echocardiogram (อัลตราซาวด์หัวใจ)</h2>
+    <div class="hint">บันทึกผลตรวจหัวใจแต่ละครั้ง พร้อมเก็บข้อความเต็มจากหมอและสรุปจาก AI ไว้เปรียบเทียบแนวโน้มได้ — ค่าที่ผิดปกติจะขึ้นเป็นสีแดง/เหลืองอัตโนมัติ</div>
+
+    <div class="tabs" id="echoTabs"></div>
+    <div id="echoChart"></div>
+
+    <div id="echoList" style="margin-top:16px;display:flex;flex-direction:column;gap:12px"></div>
+
+    <div class="row noprint" style="margin-top:20px">
+      <div><label>วันที่ตรวจ</label><input type="date" id="e_date"></div>
+      <div><label>คลินิก/สัตวแพทย์</label><input id="e_vet" placeholder="เช่น รพ.สัตว์ / หมอเอ"></div>
+      <div><label>ความเสี่ยงลิ่มเลือด (ATE)</label>
+        <select id="e_risk">
+          <option value="">— ยังไม่ระบุ —</option>
+          <option value="low">ต่ำ</option>
+          <option value="moderate">ปานกลาง</option>
+          <option value="high">สูง</option>
+        </select>
+      </div>
+      <div><label>การวินิจฉัย</label>
+        <select id="e_diag" onchange="document.getElementById('e_diagOtherWrap').style.display=this.value==='other'?'block':'none'">
+          <option value="">— ยังไม่ระบุ/รอผล —</option>
+          <option value="normal">ปกติ</option>
+          <option value="hcm">HCM (Hypertrophic Cardiomyopathy)</option>
+          <option value="hcm_phenotype">HCM phenotype (หนาจากสาเหตุอื่น)</option>
+          <option value="rcm">RCM (Restrictive Cardiomyopathy)</option>
+          <option value="dcm">DCM (Dilated Cardiomyopathy)</option>
+          <option value="arvc">ARVC</option>
+          <option value="hcm_endstage">HCM ระยะท้าย (End-stage)</option>
+          <option value="other">อื่นๆ (ระบุเพิ่มเติม)</option>
+        </select>
+      </div>
+    </div>
+    <div class="row noprint" id="e_diagOtherWrap" style="display:none;margin-top:10px">
+      <div style="flex:1 1 100%"><label>ระบุการวินิจฉัยเพิ่มเติม</label><input id="e_diagOther" placeholder="พิมพ์รายละเอียด"></div>
+    </div>
+
+    <div class="row noprint" style="margin-top:10px">
+      <div><label>IVSd — ผนังหัวใจหนา (cm)</label><input type="number" step="0.01" id="e_ivsd" placeholder="ปกติ ≤0.6"></div>
+      <div><label>LA/Ao ratio</label><input type="number" step="0.01" id="e_laao" placeholder="ปกติ 1.6–1.7"></div>
+      <div><label>LAFS — บีบตัว LA (%)</label><input type="number" step="0.1" id="e_lafs" placeholder="ปกติ ≥25%"></div>
+      <div><label>LVFS — บีบตัว LV (%) <span class="muted">(ถ้ามี)</span></label><input type="number" step="0.1" id="e_lvfs" placeholder="ถ้ามี"></div>
+      <div><label>LVPWd (cm) <span class="muted">(ถ้ามี)</span></label><input type="number" step="0.01" id="e_lvpwd" placeholder="ถ้ามี"></div>
+    </div>
+
+    <div class="row noprint" style="margin-top:10px">
+      <div style="flex:1 1 100%">
+        <label>🔎 สถานะ Function อื่นๆ (ถ้ามี)</label>
+        <input id="e_funcnote" placeholder='เช่น "รอสัตว์สงบก่อนอัลตราซาวด์ประเมินซ้ำ"'>
+      </div>
+    </div>
+
+    <div class="row noprint" style="margin-top:10px">
+      <div style="flex:1 1 100%">
+        <label>📄 ผลเต็มจากหมอ (paste ข้อความต้นฉบับจากสัตวแพทย์)</label>
+        <textarea id="e_fullnote" rows="5" placeholder="วางข้อความที่หมอส่งมาทั้งหมดตรงนี้..."></textarea>
+      </div>
+    </div>
+    <div class="row noprint" style="margin-top:10px">
+      <div style="flex:1 1 100%">
+        <label>🤖 สรุปจาก AI (paste สรุปที่ให้ AI ช่วยอ่านผลให้)</label>
+        <textarea id="e_aisummary" rows="5" placeholder="วางสรุปจาก AI ตรงนี้..."></textarea>
+      </div>
+    </div>
+    <div class="row noprint" style="margin-top:12px">
+      <div style="flex:0 0 auto"><button class="btn ghost" id="echoCancelEditBtn" style="display:none" onclick="cancelEditEcho()">ยกเลิกแก้ไข</button></div>
+      <div style="flex:0 0 auto"><button class="btn mint" id="echoSubmitBtn" onclick="addEcho()">💾 บันทึกผล Echo</button></div>
+    </div>
+  </div>
+
+  <!-- MEDICATION LOG CARD -->
+  <div class="card">
+    <h2>💊 ประวัติการให้ยา</h2>
+    <div class="hint">บันทึกยาที่เริ่ม/ปรับ/หยุด พร้อมเชื่อมกับผล Echo ที่เกี่ยวข้องได้ (เช่น "เริ่มยาป้องกันลิ่มเลือดหลัง Echo วันที่...")</div>
+
+    <div class="scroll">
+      <table id="medTable"></table>
+    </div>
+
+    <div class="row noprint" style="margin-top:16px">
+      <div><label>วันที่</label><input type="date" id="m_date"></div>
+      <div style="flex:1.3 1 200px"><label>ชื่อยา</label>
+        <input list="drugList" id="m_drug" placeholder="เช่น Clopidogrel, Furosemide">
+        <datalist id="drugList">
+          <option value="Clopidogrel (Plavix)">
+          <option value="Furosemide (Lasix)">
+          <option value="Pimobendan (Vetmedin)">
+          <option value="Spironolactone">
+          <option value="Benazepril">
+          <option value="Enalapril">
+          <option value="Telmisartan (Semintra)">
+          <option value="Atenolol">
+        </datalist>
+      </div>
+      <div><label>ขนาด/ความถี่</label><input id="m_dose" placeholder="เช่น 1/4 เม็ด วันละครั้ง"></div>
+      <div><label>การกระทำ</label>
+        <select id="m_action">
+          <option value="start">เริ่มยาใหม่</option>
+          <option value="adjust">ปรับขนาดยา</option>
+          <option value="stop">หยุดยา</option>
+        </select>
+      </div>
+    </div>
+    <div class="row noprint" style="margin-top:10px">
+      <div><label>เชื่อมกับผล Echo วันที่ (ถ้ามี)</label>
+        <select id="m_linkedEcho"><option value="">— ไม่เชื่อม —</option></select>
+      </div>
+      <div style="flex:2 1 220px"><label>หมายเหตุ</label><input id="m_note" placeholder="เช่น เริ่มหลังพบความเสี่ยงลิ่มเลือดสูง"></div>
+      <div style="flex:0 0 auto"><button class="btn ghost" id="medCancelEditBtn" style="display:none" onclick="cancelEditMed()">ยกเลิก</button></div>
+      <div style="flex:0 0 auto"><button class="btn" id="medSubmitBtn" onclick="addMed()">บันทึก</button></div>
+    </div>
   </div>
 
   <!-- RRR -->
