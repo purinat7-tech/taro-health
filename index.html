@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
-<meta name="theme-color" content="#FFF8F0">
+<meta name="theme-color" content="#F3F4FC">
 <meta name="description" content="สมุดสุขภาพทาโร่ - ติดตามค่าไต หัวใจ น้ำหนัก และอัตราการหายใจ">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="favicon-32.png" sizes="32x32">
@@ -11,96 +11,168 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Taro Health">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<title>สมุดสุขภาพทาโร่ 🐾</title>
+<title>Taro Health | Dashboard</title>
 <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#FFF8F0; --card:#FFFFFF; --card2:#FBF3E9; --mint2:#EAF8F0;
-  --line:#F0E6D8; --ink:#2B2A28; --dim:#948B7C;
-  --mint:#8FE0B5; --mint-d:#3AAE71; --mint-ink:#1F6B45;
-  --pink:#FFD1DC; --pink-d:#FF7A9A;
-  --ok:#34C77B; --warn:#F5A623; --bad:#FF6B6B;
-  --okbg:#E4F8ED; --warnbg:#FFF3E0; --badbg:#FFEBEC;
-  --note:#B48CE0; --notebg:#F1E9FB;
-  --wt:#F0B457; --wtbg:#FFF3DC;
-  --off:#A79C8C; --offbg:#EFEAE2;
-  --black:#232227; --shadow:0 10px 28px rgba(60,40,20,.08);
+  --bg:#F3F4FC; --sidebar:#FFFFFF; --card:#FFFFFF; --card2:#F7F8FE;
+  --line:#E8EAF6; --ink:#1B1E2B; --dim:#8B90A8;
+  --accent:#4C6FFF; --accent-ink:#FFFFFF; --accent-soft:#EAEFFF; --accent-d:#3B57DB;
+  --ok:#17B978; --okbg:#E4FBF1;
+  --warn:#F5A623; --warnbg:#FFF3E0;
+  --bad:#F5455C; --badbg:#FFEAEC;
+  --note:#8C6CE0; --notebg:#F0EBFC;
+  --wt:#F0A93F; --off:#A7ACC0; --offbg:#EEF0F8;
+  --shadow:0 8px 24px rgba(76,111,255,.08);
+  --radius:18px;
 }
 body.dark{
-  --bg:#161515; --card:#211f1e; --card2:#26231f; --mint2:#1c2a22;
-  --line:#332f2b; --ink:#F3EEE6; --dim:#a79c8c;
-  --mint:#6fd6a0; --mint-d:#3aae71; --mint-ink:#8fe0b5;
-  --pink:#e6a6b8; --pink-d:#ff7a9a;
-  --okbg:#173626; --warnbg:#3a2c14; --badbg:#3a1c1e;
-  --note:#c9a8ec; --notebg:#2a2136;
-  --wt:#e0ab5c; --wtbg:#3a2c14;
-  --off:#8c8175; --offbg:#2a2622;
-  --black:#f3eee6; --shadow:0 10px 28px rgba(0,0,0,.35);
+  --bg:#12141F; --sidebar:#171A28; --card:#1B1E2E; --card2:#20233436;
+  --line:#2A2E42; --ink:#EDEFFB; --dim:#8D93B0;
+  --accent:#5B7CFF; --accent-ink:#FFFFFF; --accent-soft:#28304F; --accent-d:#7C93FF;
+  --okbg:#123528; --warnbg:#3A2C14; --badbg:#3A1620; --notebg:#241E3A;
+  --shadow:0 8px 30px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:Sarabun,system-ui,-apple-system,sans-serif;font-size:15px;-webkit-tap-highlight-color:transparent}
-.paws{background-image:radial-gradient(var(--line) 1.4px, transparent 1.4px);background-size:26px 26px}
-header{position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);padding:12px 16px;display:flex;align-items:center;gap:10px;flex-wrap:nowrap}
-.avatar{width:46px;height:46px;border-radius:50%;overflow:hidden;flex:0 0 auto;border:2.5px solid #fff;box-shadow:var(--shadow);background:var(--mint2)}
-.avatar img{width:100%;height:100%;object-fit:cover}
-.hgroup{flex:1;min-width:0}
-h1{font-size:19px;margin:0;font-weight:800;letter-spacing:.2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font-size:12px;color:var(--dim);font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-@media (max-width:480px){
-  h1{font-size:16px}
-  .sub{font-size:10.5px}
-  .syncbadge span:last-child{display:none}
-  .syncbadge{padding:6px 9px}
-  .headerActions{gap:6px}
-  .iconbtn{width:34px;height:34px;font-size:14px}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Sarabun,system-ui,-apple-system,sans-serif;font-size:14.5px;-webkit-tap-highlight-color:transparent}
+body.dark{background-image:
+  linear-gradient(135deg, rgba(91,124,255,.05) 25%, transparent 25%),
+  linear-gradient(225deg, rgba(91,124,255,.05) 25%, transparent 25%),
+  linear-gradient(45deg, rgba(91,124,255,.05) 25%, transparent 25%),
+  linear-gradient(315deg, rgba(91,124,255,.05) 25%, transparent 25%);
+  background-position: 40px 0, 40px 0, 0 0, 0 0;
+  background-size: 80px 80px;
+  background-repeat: repeat;
 }
-.wrap{max-width:1080px;margin:0 auto;padding:14px 16px 16px;display:flex;flex-direction:column;gap:16px}
-.card{background:var(--card);border:1px solid var(--line);border-radius:24px;padding:18px;box-shadow:var(--shadow)}
-.card h2{font-size:16.5px;margin:0 0 4px;font-weight:700;display:flex;align-items:center;gap:8px}
-.card .hint{font-size:12.5px;color:var(--dim);margin-bottom:12px;line-height:1.55}
+a{color:inherit}
+::-webkit-scrollbar{width:8px;height:8px}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:8px}
+
+/* ===================== APP SHELL ===================== */
+#appRoot{display:none}
+.shell{display:flex;min-height:100vh}
+
+/* ---- Sidebar ---- */
+.sidebar{width:246px;flex:0 0 auto;background:var(--sidebar);border-right:1px solid var(--line);display:flex;flex-direction:column;padding:20px 14px;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:40}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 20px}
+.brand img{width:34px;height:34px;border-radius:10px;object-fit:cover}
+.brand b{font-size:16.5px;font-weight:800;letter-spacing:.2px}
+.navGroup{margin-bottom:18px}
+.navLabel{font-size:10.5px;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:.6px;padding:0 10px;margin-bottom:8px}
+.navItem{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:12px;color:var(--dim);font-weight:600;font-size:13.5px;cursor:pointer;margin-bottom:3px;transition:.15s;border:0;background:none;width:100%;text-align:left;font-family:inherit}
+.navItem .ic{font-size:16px;flex:0 0 auto;width:20px;text-align:center}
+.navItem:hover{background:var(--card2);color:var(--ink)}
+.navItem.on{background:var(--accent);color:var(--accent-ink);box-shadow:var(--shadow)}
+.navBadge{margin-left:auto;background:var(--bad);color:#fff;font-size:10px;font-weight:800;padding:1px 6px;border-radius:999px}
+.sidebarFoot{margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+
+/* ---- Topbar ---- */
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:30;background:var(--bg);border-bottom:1px solid var(--line);padding:14px 22px;display:flex;align-items:center;gap:12px}
+.hamburger{display:none;width:38px;height:38px;border-radius:11px;background:var(--card);border:1px solid var(--line);align-items:center;justify-content:center;font-size:17px;cursor:pointer;flex:0 0 auto}
+.titleWrap{min-width:0;overflow:hidden}
+.pageTitle{font-size:19px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pageSub{font-size:11.5px;color:var(--dim);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topActions{display:flex;align-items:center;gap:10px;margin-left:auto;flex:0 0 auto}
+@media (max-width:640px){
+  .topbar{padding:12px 14px;gap:8px}
+  .pageTitle{font-size:16px}
+  .pageSub{font-size:10px}
+  .syncbadge span:last-child{display:none}
+  .syncbadge{padding:8px}
+  .profileChip{padding:5px}
+  .iconbtn{width:34px;height:34px;font-size:13px}
+  .topActions{gap:6px}
+}
+.syncbadge{display:flex;align-items:center;gap:6px;font-size:11px;padding:7px 13px;border-radius:999px;background:var(--card2);border:1px solid var(--line);white-space:nowrap;font-weight:700;color:var(--dim)}
+.syncdot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+.syncdot.on{background:var(--ok);box-shadow:0 0 0 3px var(--okbg)}
+.syncdot.busy{background:var(--warn);animation:pulse 1s infinite}
+.syncdot.off{background:var(--bad)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.iconbtn{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-size:15px;color:var(--ink);flex:0 0 auto}
+.profileChip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:var(--card2);border:1px solid var(--line)}
+.profileChip .pav{width:28px;height:28px;border-radius:50%;overflow:hidden;background:var(--accent-soft)}
+.profileChip .pav img{width:100%;height:100%;object-fit:cover}
+.profileChip .pname{font-size:12px;font-weight:700;line-height:1.2}
+.profileChip .prole{font-size:10px;color:var(--dim);font-weight:600}
+@media (max-width:480px){.profileChip .ptxt{display:none}}
+
+/* ---- Page content ---- */
+.pageContent{flex:1;padding:20px 22px 90px;max-width:1180px;width:100%;margin:0 auto}
+.page{display:none;flex-direction:column;gap:16px}
+.page.on{display:flex}
+
+/* ---- Bottom nav (mobile) ---- */
+.bottomNav{display:none;position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--sidebar);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom));justify-content:space-around}
+.bnItem{display:flex;flex-direction:column;align-items:center;gap:2px;color:var(--dim);font-size:9.5px;font-weight:700;background:none;border:0;padding:6px 4px;border-radius:12px;flex:1}
+.bnItem .ic{font-size:18px}
+.bnItem.on{color:var(--accent)}
+
+/* ---- Sidebar overlay for tablet width ---- */
+.sideOverlay{display:none;position:fixed;inset:0;background:rgba(10,12,20,.45);z-index:39}
+
+@media (max-width:980px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:.22s;box-shadow:0 0 40px rgba(0,0,0,.2)}
+  .sidebar.open{transform:translateX(0)}
+  .sideOverlay.show{display:block}
+  .hamburger{display:flex}
+  .bottomNav{display:flex}
+  .pageContent{padding-bottom:88px}
+}
+
+/* ===================== CARDS / GENERIC ===================== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+.card h2{font-size:15.5px;margin:0 0 4px;font-weight:800;display:flex;align-items:center;gap:8px}
+.card .hint{font-size:12px;color:var(--dim);margin-bottom:12px;line-height:1.55}
 .grid{display:grid;gap:12px}
 .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
-.kpi{background:var(--card2);border:1px solid var(--line);border-radius:20px;padding:14px;min-width:0}
-.kpi .lab{font-size:12px;color:var(--dim);font-weight:600}
-.kpi .val{font-size:25px;font-weight:800;line-height:1.25;font-variant-numeric:tabular-nums}
-.kpi .del{font-size:12px;font-weight:600}
-.kpi .asof{font-size:10.5px;color:var(--dim);margin-top:2px;font-weight:600}
-.pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11px;font-weight:700}
+.kpi{background:var(--card2);border:1px solid var(--line);border-radius:16px;padding:14px;min-width:0;position:relative}
+.kpi.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.kpi.primary .lab,.kpi.primary .asof{color:rgba(255,255,255,.78)}
+.kpi .lab{font-size:11.5px;color:var(--dim);font-weight:700}
+.kpi .val{font-size:23px;font-weight:800;line-height:1.3;font-variant-numeric:tabular-nums}
+.kpi .del{font-size:11.5px;font-weight:700}
+.kpi .asof{font-size:10px;color:var(--dim);margin-top:2px;font-weight:600}
+.pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:10.5px;font-weight:800}
 .p-ok{background:var(--okbg);color:var(--ok)}
 .p-warn{background:var(--warnbg);color:var(--warn)}
 .p-bad{background:var(--badbg);color:var(--bad)}
 .p-off{background:var(--offbg);color:var(--off)}
+.kpi.primary .pill{background:rgba(255,255,255,.22);color:#fff}
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.tab{padding:8px 16px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--dim);cursor:pointer;font-size:13px;font-family:inherit;font-weight:600;transition:.15s}
-.tab.on{background:var(--black);color:var(--bg);border-color:var(--black)}
-table{width:100%;border-collapse:collapse;font-size:13px}
+.tab{padding:8px 15px;border-radius:11px;border:1px solid var(--line);background:var(--card2);color:var(--dim);cursor:pointer;font-size:12.5px;font-family:inherit;font-weight:700;transition:.15s}
+.tab.on{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
 th,td{padding:9px 8px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 th:first-child,td:first-child{text-align:left}
-thead th{color:var(--dim);font-weight:700;font-size:11.5px;text-transform:uppercase;letter-spacing:.3px}
+thead th{color:var(--dim);font-weight:700;font-size:10.5px;text-transform:uppercase;letter-spacing:.3px}
 tbody tr:hover{background:var(--card2)}
-tr.noteRow td{white-space:normal;text-align:left;font-size:11.5px;color:var(--note);background:var(--notebg);padding-top:5px;padding-bottom:5px}
-tr.stoppedRow{opacity:.55}
+tr.noteRow td{white-space:normal;text-align:left;font-size:11px;color:var(--note);background:var(--notebg);padding-top:5px;padding-bottom:5px}
+tr.stoppedRow{opacity:.5}
+.dotStatus{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:1px}
 .scroll{overflow-x:auto}
-input,select,button,textarea{font-family:inherit;font-size:14px}
-input,select,textarea{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:14px;padding:10px 12px;width:100%;min-width:0}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--mint-d)}
+input,select,button,textarea{font-family:inherit;font-size:13.5px}
+input,select,textarea{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);border-radius:12px;padding:10px 12px;width:100%;min-width:0}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
 textarea{resize:vertical;line-height:1.5}
-label{font-size:12px;color:var(--dim);font-weight:600;display:block;margin-bottom:5px}
-.btn{background:var(--black);color:var(--bg);border:0;border-radius:999px;padding:11px 20px;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.12);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+label{font-size:11.5px;color:var(--dim);font-weight:700;display:block;margin-bottom:5px}
+.btn{background:var(--ink);color:var(--bg);border:0;border-radius:11px;padding:10px 18px;font-weight:700;cursor:pointer;transition:.15s;box-shadow:0 4px 12px rgba(0,0,0,.1);text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
 .btn:active{transform:scale(.96)}
 .btn:disabled{opacity:.5;cursor:default;transform:none}
-.btn.mint{background:var(--mint);color:var(--mint-ink)}
+.btn.accent{background:var(--accent);color:#fff}
+.btn.mint{background:var(--ok);color:#fff}
 .btn.ghost{background:var(--card2);border:1.5px solid var(--line);color:var(--ink);box-shadow:none}
-.btn.danger{background:transparent;border:1.5px solid var(--bad);color:var(--bad);padding:5px 12px;font-size:12px;box-shadow:none}
-.btn.editbtn{background:transparent;border:1.5px solid var(--note);color:var(--note);padding:5px 12px;font-size:12px;box-shadow:none}
+.btn.danger{background:transparent;border:1.5px solid var(--bad);color:var(--bad);padding:5px 12px;font-size:11.5px;box-shadow:none}
+.btn.editbtn{background:transparent;border:1.5px solid var(--note);color:var(--note);padding:5px 12px;font-size:11.5px;box-shadow:none}
 .btn.bad{background:var(--bad);color:#fff}
-.btn.sm{padding:5px 12px;font-size:12px;box-shadow:none}
+.btn.sm{padding:5px 12px;font-size:11.5px;box-shadow:none}
 .rowActions{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
-.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--dim);font-size:12px;font-weight:600;cursor:pointer}
-.chip:hover{border-color:var(--mint-d);color:var(--mint-ink)}
+.chip{display:inline-flex;align-items:center;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);color:var(--dim);font-size:11.5px;font-weight:700;cursor:pointer}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
 .chipsRow{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 
-/* ---------- Form rows: robust mobile-first stacking (fixes overlap on iPhone) ---------- */
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
 .row>div{flex:1 1 160px;min-width:0}
 @media (max-width:640px){
@@ -110,128 +182,114 @@ label{font-size:12px;color:var(--dim);font-weight:600;display:block;margin-botto
   .row .btn{width:100%}
 }
 svg text{font-family:Sarabun,sans-serif}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin-top:8px;font-weight:600}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--dim);margin-top:8px;font-weight:600}
 .dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-.alert{border-radius:20px;padding:14px 16px;font-size:13.5px;line-height:1.65;font-weight:500;display:flex;gap:10px;align-items:flex-start}
+.alert{border-radius:16px;padding:13px 16px;font-size:13px;line-height:1.6;font-weight:500;display:flex;gap:10px;align-items:flex-start}
 .alert b{font-weight:800}
-.a-ok{background:var(--okbg);color:var(--mint-ink)}
-.a-warn{background:var(--warnbg);color:#8a5a0f}
-.a-bad{background:var(--badbg);color:#a3313a}
-.muted{color:var(--dim);font-size:12px}
-footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34px;line-height:1.8}
-#installBtn{display:none}
-.iconbtn{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:var(--card2);border:1px solid var(--line);cursor:pointer;font-size:16px}
-.headerActions{display:flex;gap:8px;align-items:center;margin-left:auto}
-@media print{header,.tabs,.noprint{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;border:1px solid #ccc;box-shadow:none}.echoText{max-height:none!important;overflow:visible!important}}
+.a-ok{background:var(--okbg);color:var(--ok)}
+.a-warn{background:var(--warnbg);color:#a06a0f}
+.a-bad{background:var(--badbg);color:#b3323f}
+.muted{color:var(--dim);font-size:11.5px}
+footer.appfoot{text-align:center;color:var(--dim);font-size:11px;padding:10px 16px 6px;line-height:1.8}
+@media print{.sidebar,.topbar,.bottomNav,.noprint{display:none!important}body{background:#fff;color:#000}.card{break-inside:avoid;border:1px solid #ccc;box-shadow:none}.echoText{max-height:none!important;overflow:visible!important}.shell{display:block}.main{width:100%}}
 
-/* ---------------- Heart / ATE warning card ---------------- */
-.vitalCard{background:linear-gradient(135deg,var(--badbg),var(--card));border:1px solid #ffd7db}
+/* ---- Heart / ATE ---- */
+.vitalCard{background:linear-gradient(135deg,var(--badbg),var(--card));border:1px solid var(--badbg)}
 .vitalList{display:grid;gap:8px;margin-top:6px}
-.vitalItem{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.55}
-.vitalItem .ic{flex:0 0 auto;font-size:17px;line-height:1.3}
+.vitalItem{display:flex;gap:10px;align-items:flex-start;font-size:12.5px;line-height:1.55}
+.vitalItem .ic{flex:0 0 auto;font-size:16px;line-height:1.3}
 .vitalItem b{font-weight:800}
-.vitalFoot{margin-top:12px;background:var(--bad);color:#fff;border-radius:14px;padding:10px 14px;font-size:12.5px;font-weight:700;line-height:1.6;text-align:center}
+.vitalFoot{margin-top:12px;background:var(--bad);color:#fff;border-radius:12px;padding:10px 14px;font-size:12px;font-weight:700;line-height:1.6;text-align:center}
 
-/* ---------------- Vet clinic navigation card ---------------- */
-.vetCard{display:flex;flex-direction:column;gap:10px;border-radius:20px;padding:14px;border:1.5px solid var(--line);background:var(--card2)}
-.vetCard.active{border-color:var(--mint-d);background:var(--okbg)}
+/* ---- Vet cards ---- */
+.vetCard{display:flex;flex-direction:column;gap:10px;border-radius:16px;padding:14px;border:1.5px solid var(--line);background:var(--card2)}
+.vetCard.active{border-color:var(--accent);background:var(--accent-soft)}
 .vetCard .vTop{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap}
-.vetCard .vName{font-weight:800;font-size:14.5px}
-.vetCard .vHours{font-size:11.5px;color:var(--dim);font-weight:600;margin-top:2px}
-.vetCard .vAddr{font-size:12px;color:var(--dim);line-height:1.5;margin:2px 0 4px}
-.vBadge{font-size:11px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
-.vBadge.open{background:var(--okbg);color:var(--mint-ink)}
-.vBadge.closed{background:var(--badbg);color:#a3313a}
+.vetCard .vName{font-weight:800;font-size:13.5px}
+.vetCard .vHours{font-size:11px;color:var(--dim);font-weight:600;margin-top:2px}
+.vetCard .vAddr{font-size:11.5px;color:var(--dim);line-height:1.5;margin:2px 0 4px}
+.vBadge{font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
+.vBadge.open{background:var(--okbg);color:var(--ok)}
+.vBadge.closed{background:var(--badbg);color:var(--bad)}
 .vetActions{display:flex;gap:8px;flex-wrap:wrap}
-.vetActions .btn{flex:1;min-width:120px;font-size:13px;padding:9px 14px}
-.vetNote{font-size:12px;font-weight:700;color:var(--bad);background:var(--badbg);border-radius:12px;padding:8px 12px;text-align:center;margin-top:2px}
+.vetActions .btn{flex:1;min-width:120px;font-size:12.5px;padding:9px 14px}
+.vetNote{font-size:11.5px;font-weight:700;color:var(--bad);background:var(--badbg);border-radius:12px;padding:8px 12px;text-align:center;margin-top:2px}
 
-/* ---------------- Echo history card ---------------- */
-.echoCard{border:1.5px solid var(--line);background:var(--card2);border-radius:20px;padding:14px}
-.echoDate{font-weight:800;font-size:14.5px}
+/* ---- Echo ---- */
+.echoCard{border:1.5px solid var(--line);background:var(--card2);border-radius:16px;padding:14px}
+.echoDate{font-weight:800;font-size:13.5px}
 .echoMetrics{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
-.echoFuncNote{margin-top:9px;font-size:12.5px;color:#8a5a0f;background:var(--warnbg);padding:9px 12px;border-radius:12px;line-height:1.55}
-.echoDetails{margin-top:9px;border:1px solid var(--line);border-radius:14px;padding:10px 13px;background:var(--card)}
-.echoDetails summary{cursor:pointer;font-weight:700;font-size:13px;color:var(--note);list-style:none}
+.echoFuncNote{margin-top:9px;font-size:12px;color:#a06a0f;background:var(--warnbg);padding:9px 12px;border-radius:12px;line-height:1.55}
+.echoDetails{margin-top:9px;border:1px solid var(--line);border-radius:12px;padding:10px 13px;background:var(--card)}
+.echoDetails summary{cursor:pointer;font-weight:700;font-size:12.5px;color:var(--note);list-style:none}
 .echoDetails summary::-webkit-details-marker{display:none}
 .echoDetails summary::before{content:'▸ ';display:inline-block;transition:.15s}
 .echoDetails[open] summary::before{content:'▾ '}
-.echoText{white-space:pre-wrap;font-size:12.5px;color:var(--ink);line-height:1.65;margin-top:9px;max-height:280px;overflow-y:auto;font-family:inherit}
+.echoText{white-space:pre-wrap;font-size:12px;color:var(--ink);line-height:1.65;margin-top:9px;max-height:280px;overflow-y:auto;font-family:inherit}
 
-/* ---------------- Auth / Sync ---------------- */
-.syncbadge{display:flex;align-items:center;gap:6px;font-size:11.5px;padding:6px 12px;border-radius:999px;border:1px solid var(--line);background:var(--card2);white-space:nowrap;font-weight:600;color:var(--dim)}
-.syncdot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
-.syncdot.on{background:var(--ok);box-shadow:0 0 0 3px var(--okbg)}
-.syncdot.busy{background:var(--warn);animation:pulse 1s infinite}
-.syncdot.off{background:var(--bad)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+/* ---- Auth / Family PIN gate ---- */
 .modalOverlay{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-y:auto}
-.modalOverlay::before,.modalOverlay::after{content:'';position:absolute;border-radius:50%;filter:blur(2px);z-index:0;pointer-events:none}
-.modalOverlay::before{width:280px;height:280px;background:var(--pink);opacity:.35;top:-60px;left:-70px}
-.modalOverlay::after{width:220px;height:220px;background:var(--mint);opacity:.4;bottom:-40px;right:-60px}
-.modalBox{background:transparent;border-radius:0;padding:0;max-width:380px;width:100%;overflow:visible;box-shadow:none;position:relative;z-index:1}
-.modalHero{padding:16px 10px 22px;text-align:center;position:relative}
-.modalHero .blob{width:220px;height:220px;border-radius:50%;background:radial-gradient(circle at 35% 30%, var(--mint) 0%, var(--mint) 100%);margin:0 auto;display:grid;place-items:center;position:relative;box-shadow:0 20px 40px rgba(58,174,113,.22)}
-.modalHero img{width:174px;height:174px;border-radius:50%;object-fit:cover;border:6px solid #fff;box-shadow:0 10px 20px rgba(0,0,0,.12)}
-.bubble{position:absolute;top:-14px;right:-6px;background:#fff;border-radius:16px 16px 4px 16px;padding:7px 14px;font-weight:800;font-size:14px;box-shadow:0 8px 18px rgba(0,0,0,.1);color:var(--ink);white-space:nowrap}
-.modalBody{padding:4px 4px 8px;text-align:center}
-.modalBody h3{margin:0 0 8px;font-size:23px;font-weight:800}
-.modalBody p{color:var(--dim);font-size:13.5px;margin:0 0 22px;line-height:1.65}
-.modalBody input{margin-bottom:10px;text-align:center;font-weight:600;letter-spacing:.5px}
-.modalBox code{background:var(--card2);padding:2px 6px;border-radius:6px;font-size:12px}
-.pinToggle{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--dim);margin:-2px 0 14px;cursor:pointer;user-select:none;font-weight:600}
-.err{color:var(--bad);font-size:12.5px;min-height:18px;margin:-4px 0 8px;text-align:center;font-weight:600}
-#appRoot{display:none}
+.modalBox{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:0;max-width:380px;width:100%;overflow:hidden;box-shadow:0 20px 50px rgba(20,30,80,.15)}
+.modalHero{background:linear-gradient(135deg,var(--accent),var(--accent-d));padding:34px 10px 20px;text-align:center;position:relative}
+.modalHero .blob{width:118px;height:118px;border-radius:50%;background:#fff;margin:0 auto;display:grid;place-items:center;box-shadow:0 12px 26px rgba(0,0,0,.18)}
+.modalHero img{width:96px;height:96px;border-radius:50%;object-fit:cover}
+.modalHero h3{color:#fff;font-size:19px;font-weight:800;margin:14px 0 0}
+.modalBody{padding:26px 24px 28px}
+.modalBody p{color:var(--dim);font-size:12.5px;margin:0 0 20px;line-height:1.65;text-align:center}
+.modalBody input{margin-bottom:10px;text-align:center;font-weight:700;letter-spacing:.5px}
+.modalBox code{background:var(--card2);padding:2px 6px;border-radius:6px;font-size:11.5px}
+.pinToggle{display:flex;align-items:center;justify-content:center;gap:6px;font-size:11.5px;color:var(--dim);margin:-2px 0 14px;cursor:pointer;user-select:none;font-weight:600}
+.err{color:var(--bad);font-size:12px;min-height:18px;margin:-4px 0 8px;text-align:center;font-weight:600}
 
-/* ---------------- RRR Recorder ---------------- */
-.recorderWrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:8px 0 4px}
-.recorderRing{position:relative;width:min(78vw, 300px);aspect-ratio:1/1;display:grid;place-items:center;touch-action:manipulation}
+/* ---- RRR Recorder (card-grid style like the amount selector) ---- */
+.recorderWrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:6px 0 2px}
+.recorderRing{position:relative;width:min(70vw, 250px);aspect-ratio:1/1;display:grid;place-items:center;touch-action:manipulation}
 .recorderRing svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)}
-.recorderRing circle.track{fill:none;stroke:var(--line);stroke-width:14}
-.recorderRing circle.progress{fill:none;stroke:var(--mint-d);stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .18s linear, stroke .2s}
-.recBtn{position:relative;width:82%;height:82%;border-radius:50%;border:none;background:linear-gradient(160deg,var(--mint) 0%,var(--mint-d) 100%);color:var(--mint-ink);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 14px 30px rgba(58,174,113,.28);transition:transform .12s}
+.recorderRing circle.track{fill:none;stroke:var(--line);stroke-width:12}
+.recorderRing circle.progress{fill:none;stroke:var(--accent);stroke-width:12;stroke-linecap:round;transition:stroke-dashoffset .18s linear, stroke .2s}
+.recBtn{position:relative;width:82%;height:82%;border-radius:50%;border:none;background:var(--accent-soft);color:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .12s, background .2s, color .2s}
 .recBtn:active{transform:scale(.95)}
-.recBtn.rec{background:linear-gradient(160deg,#ff9fb0 0%, var(--pink-d) 100%);color:#7a1330;box-shadow:0 14px 30px rgba(255,122,154,.35)}
-.recBtn .pawIcon{font-size:30px;line-height:1;margin-bottom:2px;filter:drop-shadow(0 2px 2px rgba(0,0,0,.08))}
-.recBtn .bigCount{font-size:56px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
-.recBtn .capLabel{font-size:13px;font-weight:700;margin-top:2px;opacity:.9}
+.recBtn.rec{background:var(--bad);color:#fff}
+.recBtn .pawIcon{font-size:26px;line-height:1;margin-bottom:2px}
+.recBtn .bigCount{font-size:48px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.recBtn .capLabel{font-size:11.5px;font-weight:700;margin-top:2px;opacity:.85}
 .recBtn.rec .bigCount{animation:tapPop .28s ease}
 @keyframes tapPop{0%{transform:scale(1.18)}100%{transform:scale(1)}}
-.durChips{display:flex;gap:8px;background:var(--card2);padding:5px;border-radius:999px;border:1px solid var(--line)}
-.durChip{padding:8px 16px;border-radius:999px;border:0;background:transparent;color:var(--dim);font-weight:700;font-size:13px;cursor:pointer}
-.durChip.on{background:var(--black);color:var(--bg)}
-.resultLine{font-size:15px;font-weight:600;color:var(--dim)}
-.resultLine b{font-size:22px;color:var(--ink);font-weight:800}
-.recActions{display:flex;gap:10px;width:100%;max-width:340px}
+.durChips{display:flex;gap:6px;background:var(--card2);padding:4px;border-radius:12px;border:1px solid var(--line)}
+.durChip{padding:8px 15px;border-radius:9px;border:0;background:transparent;color:var(--dim);font-weight:700;font-size:12.5px;cursor:pointer}
+.durChip.on{background:var(--accent);color:#fff}
+.resultLine{font-size:13.5px;font-weight:600;color:var(--dim)}
+.resultLine b{font-size:20px;color:var(--ink);font-weight:800}
+.recActions{display:flex;gap:10px;width:100%;max-width:320px}
 .recActions .btn{flex:1}
 
-/* ---------------- OCR upload ---------------- */
-.ocrBox{background:var(--mint2);border:1.5px dashed var(--mint-d);border-radius:18px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-.ocrBox .ocrIcon{font-size:26px}
-.ocrBox .ocrText{flex:1;min-width:180px;font-size:12.5px;color:var(--mint-ink);line-height:1.5}
+/* ---- OCR ---- */
+.ocrBox{background:var(--accent-soft);border:1.5px dashed var(--accent);border-radius:16px;padding:14px;margin-bottom:14px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.ocrBox .ocrIcon{font-size:24px}
+.ocrBox .ocrText{flex:1;min-width:180px;font-size:12px;color:var(--accent);line-height:1.5}
 .ocrPreviewRow{display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap}
-.ocrThumb{width:56px;height:56px;border-radius:12px;object-fit:cover;border:1px solid var(--line)}
-.ocrStatus{font-size:12.5px;font-weight:600;color:var(--mint-ink)}
+.ocrThumb{width:54px;height:54px;border-radius:10px;object-fit:cover;border:1px solid var(--line)}
+.ocrStatus{font-size:12px;font-weight:600;color:var(--accent)}
 .ocrStatus.err{color:var(--bad)}
-.spinner{width:16px;height:16px;border:2.5px solid var(--mint-d);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:6px}
+.spinner{width:15px;height:15px;border:2.5px solid var(--accent);border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:-3px;margin-right:6px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ---------------- Emergency RRR popup ---------------- */
-.emOverlay{position:fixed;inset:0;background:rgba(30,5,5,.55);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
+/* ---- Emergency popup ---- */
+.emOverlay{position:fixed;inset:0;background:rgba(10,5,10,.55);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center;padding:16px}
 .emOverlay.show{display:flex}
-.emBox{background:var(--card);border:2px solid var(--bad);border-radius:26px;padding:26px;max-width:420px;width:100%;text-align:center;animation:emPop .25s ease;box-shadow:0 30px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
+.emBox{background:var(--card);border:2px solid var(--bad);border-radius:22px;padding:26px;max-width:420px;width:100%;text-align:center;animation:emPop .25s ease;box-shadow:0 30px 60px rgba(0,0,0,.3);max-height:90vh;overflow-y:auto}
 @keyframes emPop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
-.emIcon{font-size:50px;line-height:1;margin-bottom:6px;animation:emShake 1.2s ease infinite}
+.emIcon{font-size:46px;line-height:1;margin-bottom:6px;animation:emShake 1.2s ease infinite}
 @keyframes emShake{0%,100%{transform:rotate(0)}20%{transform:rotate(-8deg)}40%{transform:rotate(8deg)}60%{transform:rotate(-6deg)}80%{transform:rotate(6deg)}}
-.emBox h3{color:var(--bad);font-size:20px;margin:0 0 8px;font-weight:800}
-.emVal{font-size:42px;font-weight:800;color:var(--ink);margin:2px 0}
-.emVal span{font-size:15px;color:var(--dim);font-weight:600}
-.emBox .who{color:var(--dim);font-size:12px;margin-bottom:10px}
-.emBox .msg{color:var(--ink);font-size:13.5px;line-height:1.7;text-align:left;background:var(--card2);padding:14px 16px;border-radius:16px;margin:10px 0 14px}
-.emVetBox{background:var(--badbg);border-radius:16px;padding:12px 14px;text-align:left;margin-bottom:14px}
-.emVetBox .vLabel{font-size:11px;font-weight:800;color:#a3313a;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
-.emVetBox .vName{font-weight:800;font-size:14px;margin-bottom:2px}
-.emVetBox .vSub{font-size:11.5px;color:var(--dim);margin-bottom:8px}
+.emBox h3{color:var(--bad);font-size:18.5px;margin:0 0 8px;font-weight:800}
+.emVal{font-size:38px;font-weight:800;color:var(--ink);margin:2px 0}
+.emVal span{font-size:14px;color:var(--dim);font-weight:600}
+.emBox .who{color:var(--dim);font-size:11.5px;margin-bottom:10px}
+.emBox .msg{color:var(--ink);font-size:12.5px;line-height:1.7;text-align:left;background:var(--card2);padding:14px 16px;border-radius:14px;margin:10px 0 14px}
+.emVetBox{background:var(--badbg);border-radius:14px;padding:12px 14px;text-align:left;margin-bottom:14px}
+.emVetBox .vLabel{font-size:10.5px;font-weight:800;color:var(--bad);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.emVetBox .vName{font-weight:800;font-size:13.5px;margin-bottom:2px}
+.emVetBox .vSub{font-size:11px;color:var(--dim);margin-bottom:8px}
 .emBtns{display:flex;gap:10px}
 .emBtns .btn{flex:1}
 </style>
@@ -263,322 +321,380 @@ footer{text-align:center;color:var(--dim);font-size:11.5px;padding:10px 16px 34p
 <div class="modalOverlay" id="authModal">
   <div class="modalBox">
     <div class="modalHero">
-      <div class="bubble">Meow! 🤍</div>
       <div class="blob"><img src="hero_avatar.png" alt="ทาโร่"></div>
+      <h3>Taro Health</h3>
     </div>
     <div class="modalBody">
-      <h3>สมุดสุขภาพทาโร่</h3>
       <p>ใส่ <b>รหัสครอบครัว</b> เพื่อเข้าใช้งาน — ใครก็ตามที่ใส่รหัสเดียวกันจะเห็นและบันทึกข้อมูลชุดเดียวกันได้ทันที เหมาะให้พ่อ-แม่ช่วยกันบันทึกตอนคุณไม่อยู่</p>
       <input type="password" id="pinInput" placeholder="รหัสครอบครัว เช่น TaroCKD2026" autocomplete="off">
       <div class="pinToggle" onclick="togglePinVisibility()">
         <input type="checkbox" id="pinShowChk" style="width:auto;margin:0" onclick="togglePinVisibility()"> แสดงรหัส
       </div>
       <div class="err" id="authErr"></div>
-      <button class="btn mint" style="width:100%" id="authSubmit" onclick="doEnter()">🐾 เข้าใช้งาน</button>
-      <div class="muted" style="margin-top:16px;line-height:1.7">
+      <button class="btn accent" style="width:100%" id="authSubmit" onclick="doEnter()">เข้าใช้งาน</button>
+      <div class="muted" style="margin-top:16px;line-height:1.7;text-align:center">
         ครั้งแรกที่ตั้งรหัสนี้ ระบบจะสร้างพื้นที่เก็บข้อมูลใหม่ให้อัตโนมัติ ใช้รหัสเดิมทุกครั้งบนทุกอุปกรณ์
       </div>
     </div>
   </div>
 </div>
 
-<div id="appRoot" class="paws">
-<header>
-  <div class="avatar"><img src="cat-avatar.png" alt="ทาโร่"></div>
-  <div class="hgroup">
-    <h1>สมุดสุขภาพทาโร่ 🐾</h1>
-    <div class="sub">CKD · Heart monitoring · <span id="today"></span></div>
-  </div>
-  <div class="headerActions noprint">
-    <div class="syncbadge" id="syncBadge" title="สถานะการซิงค์"><span class="syncdot" id="syncDot"></span><span id="syncText">กำลังเชื่อมต่อ</span></div>
-    <button class="iconbtn" id="installBtn" title="ติดตั้งแอป">📲</button>
-    <button class="iconbtn" onclick="document.body.classList.toggle('dark')" title="โหมดมืด/สว่าง">🌓</button>
-    <button class="iconbtn" onclick="doLeave()" title="ออกจากอุปกรณ์นี้">🚪</button>
-  </div>
-</header>
+<div id="appRoot">
+<div class="sideOverlay" id="sideOverlay" onclick="closeSidebar()"></div>
+<div class="shell">
 
-<div class="wrap">
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="brand"><img src="cat-avatar.png" alt="Taro"><b>Taro Health</b></div>
 
-  <!-- KPI -->
-  <div class="grid kpis" id="kpis"></div>
-  <div id="alertBox"></div>
-
-  <!-- VET CLINIC NAVIGATION -->
-  <div class="card">
-    <h2>📍 คลินิก &amp; โรงพยาบาลสัตว์ใกล้บ้าน</h2>
-    <div class="hint">ระบบจะบอกอัตโนมัติว่าตอนนี้อยู่ในเวลาเปิดของคลินิกประจำไหม ถ้านอกเวลา/ดึก จะแนะนำให้ไปโรงพยาบาลสัตว์ที่เปิด 24 ชม. แทน</div>
-    <div class="grid" id="vetCards" style="gap:12px"></div>
-  </div>
-
-  <!-- HEART / ATE WARNING CARD -->
-  <div class="card vitalCard">
-    <h2>❤️‍🩹 เฝ้าระวังโรคหัวใจ &amp; ลิ่มเลือดอุดตัน (ATE)</h2>
-    <div id="ateStatusBanner"></div>
-    <div class="hint">แมวโรคไตเรื้อรัง (CKD) มีความเสี่ยงร่วมกับภาวะหัวใจโต (HCM) ซึ่งอาจนำไปสู่ภาวะลิ่มเลือดอุดตันเฉียบพลัน (Aortic Thromboembolism) ได้ — สังเกตอาการเหล่านี้ให้ไว:</div>
-    <div class="vitalList">
-      <div class="vitalItem"><span class="ic">🫁</span><div><b>หายใจลำบาก / หอบเหนื่อย</b> — หายใจถี่ อ้าปากหายใจ นอนอกไม่ยอมนอนตะแคง</div></div>
-      <div class="vitalItem"><span class="ic">💜</span><div><b>เหงือกซีดหรือคล้ำม่วง</b> — สัญญาณเลือดไปเลี้ยงไม่พอ</div></div>
-      <div class="vitalItem"><span class="ic">🦵</span><div><b>ขาหลังอ่อนแรงกะทันหัน / ลากขา / เป็นอัมพาต</b> — สัญญาณเด่นของลิ่มเลือดอุดตัน (Saddle Thrombus) มักเกิดฉับพลัน</div></div>
-      <div class="vitalItem"><span class="ic">🥶</span><div><b>อุ้งเท้าเย็นผิดปกติ</b> — คลำชีพจรขาหลังไม่ได้หรือเบากว่าปกติ</div></div>
-      <div class="vitalItem"><span class="ic">😿</span><div><b>ร้องเจ็บปวดกะทันหัน</b> — โดยเฉพาะบริเวณขาหลังหรือช่วงท้อง</div></div>
-      <div class="vitalItem"><span class="ic">😴</span><div><b>ซึมผิดปกติ เบื่ออาหาร ไม่ขยับตัว</b> — อาจเป็นสัญญาณเริ่มต้นของภาวะหัวใจล้มเหลว</div></div>
+    <div class="navGroup">
+      <div class="navLabel">Overview</div>
+      <button class="navItem on" data-page="home" onclick="showPage('home')"><span class="ic">🏠</span>ภาพรวม</button>
+      <button class="navItem" data-page="vet" onclick="showPage('vet')"><span class="ic">📍</span>คลินิก / รพ.สัตว์</button>
     </div>
-    <div class="vitalFoot">⚠️ หากพบอาการเหล่านี้แม้เพียงข้อเดียว โดยเฉพาะขาหลังอ่อนแรง/เย็นผิดปกติ ให้พาไปพบสัตวแพทย์ฉุกเฉินทันที — ATE เป็นภาวะฉุกเฉินที่ต้องรักษาไวที่สุด</div>
-  </div>
 
-  <!-- ECHO HISTORY CARD -->
-  <div class="card" id="echoCardSection">
-    <h2>🫀 ประวัติ Echocardiogram (อัลตราซาวด์หัวใจ)</h2>
-    <div class="hint">บันทึกผลตรวจหัวใจแต่ละครั้ง พร้อมเก็บข้อความเต็มจากหมอและสรุปจาก AI ไว้เปรียบเทียบแนวโน้มได้ — ค่าที่ผิดปกติจะขึ้นเป็นสีแดง/เหลืองอัตโนมัติ</div>
+    <div class="navGroup">
+      <div class="navLabel">Health Records</div>
+      <button class="navItem" data-page="echo" onclick="showPage('echo')"><span class="ic">🫀</span>หัวใจ (Echo)</button>
+      <button class="navItem" data-page="meds" onclick="showPage('meds')"><span class="ic">💊</span>ยาที่ใช้ประจำ</button>
+      <button class="navItem" data-page="rrr" onclick="showPage('rrr')"><span class="ic">🫁</span>การหายใจ (RRR)</button>
+      <button class="navItem" data-page="labs" onclick="showPage('labs')"><span class="ic">🧪</span>ผลเลือด / น้ำหนัก</button>
+    </div>
 
-    <div class="tabs" id="echoTabs"></div>
-    <div id="echoChart"></div>
+    <div class="navGroup">
+      <div class="navLabel">System</div>
+      <button class="navItem" data-page="tools" onclick="showPage('tools')"><span class="ic">⚙️</span>ข้อมูล &amp; การใช้งาน</button>
+    </div>
 
-    <div id="echoList" style="margin-top:16px;display:flex;flex-direction:column;gap:12px"></div>
+    <div class="sidebarFoot">
+      <button class="navItem" onclick="doLeave()"><span class="ic">🚪</span>ออกจากอุปกรณ์นี้</button>
+    </div>
+  </aside>
 
-    <div class="row noprint" style="margin-top:20px">
-      <div><label>วันที่ตรวจ</label><input type="date" id="e_date"></div>
-      <div><label>คลินิก/สัตวแพทย์</label><input id="e_vet" placeholder="เช่น รพ.สัตว์ / หมอเอ"></div>
-      <div><label>ความเสี่ยงลิ่มเลือด (ATE)</label>
-        <select id="e_risk">
-          <option value="">— ยังไม่ระบุ —</option>
-          <option value="low">ต่ำ</option>
-          <option value="moderate">ปานกลาง</option>
-          <option value="high">สูง</option>
-        </select>
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger" onclick="openSidebar()">☰</button>
+      <div class="titleWrap">
+        <div class="pageTitle" id="pageTitleText">ภาพรวม</div>
+        <div class="pageSub">CKD · Heart monitoring · <span id="today"></span></div>
       </div>
-      <div><label>การวินิจฉัย</label>
-        <select id="e_diag" onchange="document.getElementById('e_diagOtherWrap').style.display=this.value==='other'?'block':'none'">
-          <option value="">— ยังไม่ระบุ/รอผล —</option>
-          <option value="normal">ปกติ</option>
-          <option value="hcm">HCM (Hypertrophic Cardiomyopathy)</option>
-          <option value="hcm_phenotype">HCM phenotype (หนาจากสาเหตุอื่น)</option>
-          <option value="rcm">RCM (Restrictive Cardiomyopathy)</option>
-          <option value="dcm">DCM (Dilated Cardiomyopathy)</option>
-          <option value="arvc">ARVC</option>
-          <option value="hcm_endstage">HCM ระยะท้าย (End-stage)</option>
-          <option value="other">อื่นๆ (ระบุเพิ่มเติม)</option>
-        </select>
-      </div>
-    </div>
-    <div class="row noprint" id="e_diagOtherWrap" style="display:none;margin-top:10px">
-      <div style="flex:1 1 100%"><label>ระบุการวินิจฉัยเพิ่มเติม</label><input id="e_diagOther" placeholder="พิมพ์รายละเอียด"></div>
-    </div>
-
-    <div class="row noprint" style="margin-top:10px">
-      <div><label>IVSd — ผนังหัวใจหนา (cm)</label><input type="number" step="0.01" id="e_ivsd" placeholder="ปกติ ≤0.6"></div>
-      <div><label>LA/Ao ratio</label><input type="number" step="0.01" id="e_laao" placeholder="ปกติ 1.6–1.7"></div>
-      <div><label>LAFS — บีบตัว LA (%)</label><input type="number" step="0.1" id="e_lafs" placeholder="ปกติ ≥25%"></div>
-      <div><label>LVFS — บีบตัว LV (%) <span class="muted">(ถ้ามี)</span></label><input type="number" step="0.1" id="e_lvfs" placeholder="ถ้ามี"></div>
-      <div><label>LVPWd (cm) <span class="muted">(ถ้ามี)</span></label><input type="number" step="0.01" id="e_lvpwd" placeholder="ถ้ามี"></div>
-    </div>
-
-    <div class="row noprint" style="margin-top:10px">
-      <div style="flex:1 1 100%">
-        <label>🔎 สถานะ Function อื่นๆ (ถ้ามี)</label>
-        <input id="e_funcnote" placeholder='เช่น "รอสัตว์สงบก่อนอัลตราซาวด์ประเมินซ้ำ"'>
-      </div>
-    </div>
-
-    <div class="row noprint" style="margin-top:10px">
-      <div style="flex:1 1 100%">
-        <label>📄 ผลเต็มจากหมอ (paste ข้อความต้นฉบับจากสัตวแพทย์)</label>
-        <textarea id="e_fullnote" rows="5" placeholder="วางข้อความที่หมอส่งมาทั้งหมดตรงนี้..."></textarea>
-      </div>
-    </div>
-    <div class="row noprint" style="margin-top:10px">
-      <div style="flex:1 1 100%">
-        <label>🤖 สรุปจาก AI (paste สรุปที่ให้ AI ช่วยอ่านผลให้)</label>
-        <textarea id="e_aisummary" rows="5" placeholder="วางสรุปจาก AI ตรงนี้..."></textarea>
-      </div>
-    </div>
-    <div class="row noprint" style="margin-top:12px">
-      <div style="flex:0 0 auto"><button class="btn ghost" id="echoCancelEditBtn" style="display:none" onclick="cancelEditEcho()">ยกเลิกแก้ไข</button></div>
-      <div style="flex:0 0 auto"><button class="btn mint" id="echoSubmitBtn" onclick="addEcho()">💾 บันทึกผล Echo</button></div>
-    </div>
-  </div>
-
-  <!-- MEDICATION LOG CARD (redesigned: current regular medications) -->
-  <div class="card">
-    <h2>💊 ยาที่ใช้ประจำ (Current Medications)</h2>
-    <div class="hint">บันทึกรายการยาที่ให้ทาโร่เป็นประจำ พร้อมขนาด ความถี่ เวลาที่กิน และวันที่เริ่ม — เชื่อมกับผล Echo ที่เกี่ยวข้องได้ และทำเครื่องหมายเมื่อหยุดยาแล้ว</div>
-
-    <div class="scroll">
-      <table id="medTable"></table>
-    </div>
-
-    <div class="row noprint" style="margin-top:16px">
-      <div style="flex:1.3 1 200px"><label>ชื่อยา</label>
-        <input list="drugList" id="m_drug" placeholder="เช่น Clopidogrel, Furosemide">
-        <datalist id="drugList">
-          <option value="Clopidogrel (Plavix)">
-          <option value="Furosemide (Lasix)">
-          <option value="Pimobendan (Vetmedin)">
-          <option value="Spironolactone">
-          <option value="Benazepril">
-          <option value="Enalapril">
-          <option value="Telmisartan (Semintra)">
-          <option value="Atenolol">
-        </datalist>
-      </div>
-      <div><label>ขนาด (Dose)</label><input id="m_dose" placeholder="เช่น 1/4 เม็ด"></div>
-      <div><label>ความถี่</label>
-        <input list="freqList" id="m_freq" placeholder="เช่น วันละ 2 ครั้ง" oninput="suggestTimesForFreq()">
-        <datalist id="freqList">
-          <option value="วันละ 1 ครั้ง">
-          <option value="วันละ 2 ครั้ง (เช้า-เย็น)">
-          <option value="วันละ 3 ครั้ง">
-          <option value="ทุก 2 วัน">
-          <option value="ตามอาการ (PRN)">
-        </datalist>
-      </div>
-    </div>
-    <div class="row noprint" style="margin-top:10px">
-      <div style="flex:1.3 1 220px">
-        <label>เวลาที่กิน</label>
-        <input id="m_times" placeholder="เช่น 08:00, 20:00">
-        <div class="chipsRow noprint">
-          <span class="chip" onclick="document.getElementById('m_times').value='08:00'">08:00</span>
-          <span class="chip" onclick="document.getElementById('m_times').value='08:00, 20:00'">08:00, 20:00</span>
-          <span class="chip" onclick="document.getElementById('m_times').value='08:00, 14:00, 20:00'">08:00, 14:00, 20:00</span>
+      <div class="topActions noprint">
+        <div class="syncbadge" id="syncBadge" title="สถานะการซิงค์"><span class="syncdot" id="syncDot"></span><span id="syncText">กำลังเชื่อมต่อ</span></div>
+        <button class="iconbtn" id="installBtn" title="ติดตั้งแอป">📲</button>
+        <button class="iconbtn" onclick="document.body.classList.toggle('dark')" title="โหมดมืด/สว่าง">🌓</button>
+        <div class="profileChip">
+          <div class="pav"><img src="cat-avatar.png" alt=""></div>
+          <div class="ptxt"><div class="pname">ทาโร่</div><div class="prole">Family Care</div></div>
         </div>
       </div>
-      <div><label>วันที่เริ่มกิน</label><input type="date" id="m_start"></div>
-      <div><label>สถานะ</label>
-        <select id="m_status" onchange="document.getElementById('m_stopWrap').style.display=this.value==='stopped'?'block':'none'">
-          <option value="active">กำลังใช้อยู่</option>
-          <option value="stopped">หยุดแล้ว</option>
-        </select>
-      </div>
-      <div id="m_stopWrap" style="display:none"><label>วันที่หยุด</label><input type="date" id="m_stopDate"></div>
     </div>
-    <div class="row noprint" style="margin-top:10px">
-      <div><label>เชื่อมกับ Echo วันที่ (ถ้ามี)</label>
-        <select id="m_linkedEcho"><option value="">— ไม่เชื่อม —</option></select>
+
+    <div class="pageContent">
+
+      <!-- ============ PAGE: HOME (overview) ============ -->
+      <div class="page on" id="page-home">
+        <div class="grid kpis" id="kpis"></div>
+        <div id="alertBox"></div>
+        <div class="card vitalCard">
+          <h2>❤️‍🩹 เฝ้าระวังโรคหัวใจ &amp; ลิ่มเลือดอุดตัน (ATE)</h2>
+          <div id="ateStatusBanner"></div>
+          <div class="hint">แมวโรคไตเรื้อรัง (CKD) มีความเสี่ยงร่วมกับภาวะหัวใจโต (HCM) ซึ่งอาจนำไปสู่ภาวะลิ่มเลือดอุดตันเฉียบพลัน (Aortic Thromboembolism) ได้ — สังเกตอาการเหล่านี้ให้ไว:</div>
+          <div class="vitalList">
+            <div class="vitalItem"><span class="ic">🫁</span><div><b>หายใจลำบาก / หอบเหนื่อย</b> — หายใจถี่ อ้าปากหายใจ นอนอกไม่ยอมนอนตะแคง</div></div>
+            <div class="vitalItem"><span class="ic">💜</span><div><b>เหงือกซีดหรือคล้ำม่วง</b> — สัญญาณเลือดไปเลี้ยงไม่พอ</div></div>
+            <div class="vitalItem"><span class="ic">🦵</span><div><b>ขาหลังอ่อนแรงกะทันหัน / ลากขา / เป็นอัมพาต</b> — สัญญาณเด่นของลิ่มเลือดอุดตัน (Saddle Thrombus) มักเกิดฉับพลัน</div></div>
+            <div class="vitalItem"><span class="ic">🥶</span><div><b>อุ้งเท้าเย็นผิดปกติ</b> — คลำชีพจรขาหลังไม่ได้หรือเบากว่าปกติ</div></div>
+            <div class="vitalItem"><span class="ic">😿</span><div><b>ร้องเจ็บปวดกะทันหัน</b> — โดยเฉพาะบริเวณขาหลังหรือช่วงท้อง</div></div>
+            <div class="vitalItem"><span class="ic">😴</span><div><b>ซึมผิดปกติ เบื่ออาหาร ไม่ขยับตัว</b> — อาจเป็นสัญญาณเริ่มต้นของภาวะหัวใจล้มเหลว</div></div>
+          </div>
+          <div class="vitalFoot">⚠️ หากพบอาการเหล่านี้แม้เพียงข้อเดียว โดยเฉพาะขาหลังอ่อนแรง/เย็นผิดปกติ ให้พาไปพบสัตวแพทย์ฉุกเฉินทันที</div>
+        </div>
       </div>
-      <div style="flex:2 1 220px"><label>หมายเหตุ</label><input id="m_note" placeholder="เช่น เริ่มหลังพบความเสี่ยงลิ่มเลือดสูง"></div>
-      <div style="flex:0 0 auto"><button class="btn ghost" id="medCancelEditBtn" style="display:none" onclick="cancelEditMed()">ยกเลิก</button></div>
-      <div style="flex:0 0 auto"><button class="btn" id="medSubmitBtn" onclick="addMed()">บันทึก</button></div>
+
+      <!-- ============ PAGE: VET ============ -->
+      <div class="page" id="page-vet">
+        <div class="card">
+          <h2>📍 คลินิก &amp; โรงพยาบาลสัตว์ใกล้บ้าน</h2>
+          <div class="hint">ระบบจะบอกอัตโนมัติว่าตอนนี้อยู่ในเวลาเปิดของคลินิกประจำไหม ถ้านอกเวลา/ดึก จะแนะนำให้ไปโรงพยาบาลสัตว์ที่เปิด 24 ชม. แทน</div>
+          <div class="grid" id="vetCards" style="gap:12px"></div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE: ECHO ============ -->
+      <div class="page" id="page-echo">
+        <div class="card" id="echoCardSection">
+          <h2>🫀 ประวัติ Echocardiogram (อัลตราซาวด์หัวใจ)</h2>
+          <div class="hint">บันทึกผลตรวจหัวใจแต่ละครั้ง พร้อมเก็บข้อความเต็มจากหมอและสรุปจาก AI ไว้เปรียบเทียบแนวโน้มได้ — ค่าที่ผิดปกติจะขึ้นเป็นสีแดง/เหลืองอัตโนมัติ</div>
+
+          <div class="tabs" id="echoTabs"></div>
+          <div id="echoChart"></div>
+
+          <div id="echoList" style="margin-top:16px;display:flex;flex-direction:column;gap:12px"></div>
+
+          <div class="row noprint" style="margin-top:20px">
+            <div><label>วันที่ตรวจ</label><input type="date" id="e_date"></div>
+            <div><label>คลินิก/สัตวแพทย์</label><input id="e_vet" placeholder="เช่น รพ.สัตว์ / หมอเอ"></div>
+            <div><label>ความเสี่ยงลิ่มเลือด (ATE)</label>
+              <select id="e_risk">
+                <option value="">— ยังไม่ระบุ —</option>
+                <option value="low">ต่ำ</option>
+                <option value="moderate">ปานกลาง</option>
+                <option value="high">สูง</option>
+              </select>
+            </div>
+            <div><label>การวินิจฉัย</label>
+              <select id="e_diag" onchange="document.getElementById('e_diagOtherWrap').style.display=this.value==='other'?'block':'none'">
+                <option value="">— ยังไม่ระบุ/รอผล —</option>
+                <option value="normal">ปกติ</option>
+                <option value="hcm">HCM (Hypertrophic Cardiomyopathy)</option>
+                <option value="hcm_phenotype">HCM phenotype (หนาจากสาเหตุอื่น)</option>
+                <option value="rcm">RCM (Restrictive Cardiomyopathy)</option>
+                <option value="dcm">DCM (Dilated Cardiomyopathy)</option>
+                <option value="arvc">ARVC</option>
+                <option value="hcm_endstage">HCM ระยะท้าย (End-stage)</option>
+                <option value="other">อื่นๆ (ระบุเพิ่มเติม)</option>
+              </select>
+            </div>
+          </div>
+          <div class="row noprint" id="e_diagOtherWrap" style="display:none;margin-top:10px">
+            <div style="flex:1 1 100%"><label>ระบุการวินิจฉัยเพิ่มเติม</label><input id="e_diagOther" placeholder="พิมพ์รายละเอียด"></div>
+          </div>
+
+          <div class="row noprint" style="margin-top:10px">
+            <div><label>IVSd — ผนังหัวใจหนา (cm)</label><input type="number" step="0.01" id="e_ivsd" placeholder="ปกติ ≤0.6"></div>
+            <div><label>LA/Ao ratio</label><input type="number" step="0.01" id="e_laao" placeholder="ปกติ 1.6–1.7"></div>
+            <div><label>LAFS — บีบตัว LA (%)</label><input type="number" step="0.1" id="e_lafs" placeholder="ปกติ ≥25%"></div>
+            <div><label>LVFS — บีบตัว LV (%) <span class="muted">(ถ้ามี)</span></label><input type="number" step="0.1" id="e_lvfs" placeholder="ถ้ามี"></div>
+            <div><label>LVPWd (cm) <span class="muted">(ถ้ามี)</span></label><input type="number" step="0.01" id="e_lvpwd" placeholder="ถ้ามี"></div>
+          </div>
+
+          <div class="row noprint" style="margin-top:10px">
+            <div style="flex:1 1 100%">
+              <label>🔎 สถานะ Function อื่นๆ (ถ้ามี)</label>
+              <input id="e_funcnote" placeholder='เช่น "รอสัตว์สงบก่อนอัลตราซาวด์ประเมินซ้ำ"'>
+            </div>
+          </div>
+
+          <div class="row noprint" style="margin-top:10px">
+            <div style="flex:1 1 100%">
+              <label>📄 ผลเต็มจากหมอ (paste ข้อความต้นฉบับจากสัตวแพทย์)</label>
+              <textarea id="e_fullnote" rows="5" placeholder="วางข้อความที่หมอส่งมาทั้งหมดตรงนี้..."></textarea>
+            </div>
+          </div>
+          <div class="row noprint" style="margin-top:10px">
+            <div style="flex:1 1 100%">
+              <label>🤖 สรุปจาก AI (paste สรุปที่ให้ AI ช่วยอ่านผลให้)</label>
+              <textarea id="e_aisummary" rows="5" placeholder="วางสรุปจาก AI ตรงนี้..."></textarea>
+            </div>
+          </div>
+          <div class="row noprint" style="margin-top:12px">
+            <div style="flex:0 0 auto"><button class="btn ghost" id="echoCancelEditBtn" style="display:none" onclick="cancelEditEcho()">ยกเลิกแก้ไข</button></div>
+            <div style="flex:0 0 auto"><button class="btn accent" id="echoSubmitBtn" onclick="addEcho()">💾 บันทึกผล Echo</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE: MEDICATIONS ============ -->
+      <div class="page" id="page-meds">
+        <div class="card">
+          <h2>💊 ยาที่ใช้ประจำ (Current Medications)</h2>
+          <div class="hint">บันทึกรายการยาที่ให้ทาโร่เป็นประจำ พร้อมขนาด ความถี่ เวลาที่กิน และวันที่เริ่ม — เชื่อมกับผล Echo ที่เกี่ยวข้องได้ และทำเครื่องหมายเมื่อหยุดยาแล้ว</div>
+
+          <div class="scroll">
+            <table id="medTable"></table>
+          </div>
+
+          <div class="row noprint" style="margin-top:16px">
+            <div style="flex:1.3 1 200px"><label>ชื่อยา</label>
+              <input list="drugList" id="m_drug" placeholder="เช่น Clopidogrel, Furosemide">
+              <datalist id="drugList">
+                <option value="Clopidogrel (Plavix)">
+                <option value="Furosemide (Lasix)">
+                <option value="Pimobendan (Vetmedin)">
+                <option value="Spironolactone">
+                <option value="Benazepril">
+                <option value="Enalapril">
+                <option value="Telmisartan (Semintra)">
+                <option value="Atenolol">
+              </datalist>
+            </div>
+            <div><label>ขนาด (Dose)</label><input id="m_dose" placeholder="เช่น 1/4 เม็ด"></div>
+            <div><label>ความถี่</label>
+              <input list="freqList" id="m_freq" placeholder="เช่น วันละ 2 ครั้ง" oninput="suggestTimesForFreq()">
+              <datalist id="freqList">
+                <option value="วันละ 1 ครั้ง">
+                <option value="วันละ 2 ครั้ง (เช้า-เย็น)">
+                <option value="วันละ 3 ครั้ง">
+                <option value="ทุก 2 วัน">
+                <option value="ตามอาการ (PRN)">
+              </datalist>
+            </div>
+          </div>
+          <div class="row noprint" style="margin-top:10px">
+            <div style="flex:1.3 1 220px">
+              <label>เวลาที่กิน</label>
+              <input id="m_times" placeholder="เช่น 08:00, 20:00">
+              <div class="chipsRow noprint">
+                <span class="chip" onclick="document.getElementById('m_times').value='08:00'">08:00</span>
+                <span class="chip" onclick="document.getElementById('m_times').value='08:00, 20:00'">08:00, 20:00</span>
+                <span class="chip" onclick="document.getElementById('m_times').value='08:00, 14:00, 20:00'">08:00, 14:00, 20:00</span>
+              </div>
+            </div>
+            <div><label>วันที่เริ่มกิน</label><input type="date" id="m_start"></div>
+            <div><label>สถานะ</label>
+              <select id="m_status" onchange="document.getElementById('m_stopWrap').style.display=this.value==='stopped'?'block':'none'">
+                <option value="active">กำลังใช้อยู่</option>
+                <option value="stopped">หยุดแล้ว</option>
+              </select>
+            </div>
+            <div id="m_stopWrap" style="display:none"><label>วันที่หยุด</label><input type="date" id="m_stopDate"></div>
+          </div>
+          <div class="row noprint" style="margin-top:10px">
+            <div><label>เชื่อมกับ Echo วันที่ (ถ้ามี)</label>
+              <select id="m_linkedEcho"><option value="">— ไม่เชื่อม —</option></select>
+            </div>
+            <div style="flex:2 1 220px"><label>หมายเหตุ</label><input id="m_note" placeholder="เช่น เริ่มหลังพบความเสี่ยงลิ่มเลือดสูง"></div>
+            <div style="flex:0 0 auto"><button class="btn ghost" id="medCancelEditBtn" style="display:none" onclick="cancelEditMed()">ยกเลิก</button></div>
+            <div style="flex:0 0 auto"><button class="btn accent" id="medSubmitBtn" onclick="addMed()">บันทึก</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE: RRR ============ -->
+      <div class="page" id="page-rrr">
+        <div class="card">
+          <h2>🫁 Resting Respiratory Rate</h2>
+          <div class="hint">นับขณะแมว<b>หลับสนิท/พักนิ่ง</b> · ปกติ &lt; 30 ครั้ง/นาที · เฝ้าระวัง 30–45 · ผิดปกติ &gt; 45 — นับ<b>เช้า+เย็น</b>ทุกวัน เวลาใกล้เคียงเดิม</div>
+
+          <div class="recorderWrap noprint">
+            <div class="recorderRing" id="recorderRing">
+              <svg viewBox="0 0 200 200">
+                <circle class="track" cx="100" cy="100" r="90"></circle>
+                <circle class="progress" id="progressCircle" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="565.5"></circle>
+              </svg>
+              <button class="recBtn" id="tapBtn">
+                <span class="pawIcon">🐾</span>
+                <span class="bigCount" id="tapCount">0</span>
+                <span class="capLabel" id="tapCapLabel">แตะทุกจังหวะหายใจ</span>
+              </button>
+            </div>
+
+            <div class="durChips" id="durChips">
+              <button class="durChip" data-v="15">15วิ×4</button>
+              <button class="durChip on" data-v="30">30วิ×2</button>
+              <button class="durChip" data-v="60">60วิ</button>
+            </div>
+
+            <div class="resultLine">ผลลัพธ์ <b id="tapRate">–</b> ครั้ง/นาที</div>
+
+            <div class="recActions">
+              <button class="btn ghost" onclick="resetTap()">↺ รีเซ็ต</button>
+              <button class="btn accent" onclick="useTap()">💾 บันทึกลงตอนนี้</button>
+            </div>
+          </div>
+
+          <div class="row noprint" style="margin-top:18px">
+            <div><label>วันที่</label><input type="date" id="rDate"></div>
+            <div><label>เวลา</label><input type="time" id="rTime"></div>
+            <div><label>RRR (ครั้ง/นาที)</label><input type="number" id="rVal" min="5" max="120" placeholder="เช่น 28"></div>
+            <div style="flex:1.5 1 220px"><label>บันทึกอาการ</label><input id="rNote" placeholder="เช่น ไอ / หอบ / กินยาแล้ว"></div>
+            <div style="flex:0 0 auto"><button class="btn accent" onclick="addRRR()">บันทึก</button></div>
+          </div>
+          <div id="rrrChart" style="margin-top:14px"></div>
+          <div class="legend">
+            <span><i class="dot" style="background:var(--accent)"></i>RRR</span>
+            <span><i class="dot" style="background:var(--okbg);border:1px solid var(--ok)"></i>ปกติ &lt;30</span>
+            <span><i class="dot" style="background:var(--warnbg);border:1px solid var(--warn)"></i>เฝ้าระวัง 30–45</span>
+            <span><i class="dot" style="background:var(--badbg);border:1px solid var(--bad)"></i>ผิดปกติ &gt;45</span>
+            <span><i class="dot" style="background:var(--note)"></i>เฉลี่ย 7 วัน</span>
+          </div>
+
+          <div class="scroll" style="margin-top:14px;max-height:280px;overflow-y:auto">
+            <table><thead><tr><th>วันที่</th><th>เวลา</th><th>RRR</th><th>สถานะ</th><th>บันทึก</th><th class="noprint"></th></tr></thead><tbody id="rrrBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE: LABS ============ -->
+      <div class="page" id="page-labs">
+        <div class="card">
+          <h2>🧪 ผลตรวจ – น้ำหนัก / ค่าไต / ตับ</h2>
+          <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก · ไอคอน 📝 ในกราฟ = มีบันทึกเหตุการณ์วันนั้น (เช่น ฉีดยาขับน้ำ) · กราฟแสดงทุกครั้งที่มีการบันทึกทั้งหมด</div>
+          <div class="tabs" id="labTabs"></div>
+          <div id="labChart"></div>
+          <div class="scroll" style="margin-top:14px">
+            <table id="labTable"></table>
+          </div>
+
+          <div class="ocrBox noprint">
+            <div class="ocrIcon">📷</div>
+            <div class="ocrText">
+              <b>อ่านค่าจากรูปผลตรวจ (OCR)</b><br>
+              ถ่ายรูปหรืออัปโหลดใบผลแล็บ ระบบจะพยายามอ่านค่า Creatinine / BUN / ALT / น้ำหนัก ให้อัตโนมัติ (กรุณาตรวจสอบความถูกต้องก่อนบันทึกเสมอ)
+            </div>
+            <button class="btn accent" onclick="document.getElementById('ocrFile').click()">เลือกรูป</button>
+            <input type="file" id="ocrFile" accept="image/*" capture="environment" style="display:none" onchange="handleOcrUpload(this)">
+            <div class="ocrPreviewRow" id="ocrPreviewRow" style="display:none">
+              <img id="ocrThumb" class="ocrThumb" alt="preview">
+              <div id="ocrStatus" class="ocrStatus"></div>
+            </div>
+          </div>
+
+          <div class="row noprint" id="labFormArea" style="margin-top:14px">
+            <div><label>วันที่ตรวจ</label><input type="date" id="lDate"></div>
+            <div><label>น้ำหนัก (kg)</label><input type="number" step="0.01" id="l_wt"></div>
+            <div><label>Creatinine</label><input type="number" step="0.01" id="l_cre"></div>
+            <div><label>BUN</label><input type="number" step="0.1" id="l_bun"></div>
+            <div><label>ALT/GPT</label><input type="number" step="0.1" id="l_alt"></div>
+          </div>
+          <div class="row noprint" style="margin-top:10px">
+            <div style="flex:2 1 260px">
+              <label>📝 หมายเหตุวันนี้ (เช่น ฉีดยาขับน้ำ, งดน้ำก่อนเจาะเลือด, ปรับยา)</label>
+              <input id="l_note" placeholder="เช่น ฉีด Lasix เช้านี้ก่อนเจาะเลือด">
+            </div>
+            <div style="flex:0 0 auto;display:flex;gap:8px">
+              <button class="btn ghost" id="labCancelEditBtn" style="display:none" onclick="cancelEditLab()">ยกเลิกแก้ไข</button>
+              <button class="btn accent" id="labSubmitBtn" onclick="addLab()">บันทึกผล</button>
+            </div>
+          </div>
+          <div class="muted" style="margin-top:8px">เพิ่มช่องอื่นได้ เช่น SDMA, Phosphorus, K+, PCV, ความดัน — บอกผมได้ครับ</div>
+        </div>
+      </div>
+
+      <!-- ============ PAGE: TOOLS ============ -->
+      <div class="page" id="page-tools">
+        <div class="card noprint">
+          <h2>💾 ข้อมูล &amp; การใช้งาน</h2>
+          <div class="hint">ข้อมูลเก็บบน Firestore ภายใต้ "รหัสครอบครัว" ของคุณ และแคชไว้ในเครื่องด้วย — แนะนำ Export เก็บสำรองเป็นระยะ</div>
+          <div class="row">
+            <div style="flex:0 0 auto"><button class="btn ghost" onclick="exportJSON()">⬇️ Export JSON</button></div>
+            <div style="flex:0 0 auto"><button class="btn ghost" onclick="exportCSV()">⬇️ Export CSV</button></div>
+            <div style="flex:0 0 auto"><button class="btn ghost" onclick="document.getElementById('imp').click()">⬆️ Import JSON</button></div>
+            <div style="flex:0 0 auto"><button class="btn ghost" onclick="window.print()">🖨️ พิมพ์ / PDF ให้หมอ</button></div>
+            <div style="flex:0 0 auto"><button class="btn danger" onclick="if(confirm('ล้างข้อมูลในเครื่องนี้? (ข้อมูลบน cloud จะไม่หาย)')){localStorage.removeItem(KEY);location.reload()}">ล้างข้อมูลในเครื่อง</button></div>
+            <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
+          </div>
+        </div>
+        <footer class="appfoot">
+          เครื่องมือนี้ใช้เพื่อ<b>ติดตามแนวโน้ม</b>เท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์<br>
+          หาก RRR &gt; 45 ครั้ง/นาที ต่อเนื่อง หรือหายใจอ้าปาก/เหงือกซีดม่วง/ขาหลังอ่อนแรงเฉียบพลัน → <b>พบสัตวแพทย์ฉุกเฉินทันที</b>
+        </footer>
+      </div>
+
     </div>
   </div>
-
-  <!-- RRR -->
-  <div class="card">
-    <h2>🫁 Resting Respiratory Rate</h2>
-    <div class="hint">นับขณะแมว<b>หลับสนิท/พักนิ่ง</b> · ปกติ &lt; 30 ครั้ง/นาที · เฝ้าระวัง 30–45 · ผิดปกติ &gt; 45 — นับ<b>เช้า+เย็น</b>ทุกวัน เวลาใกล้เคียงเดิม</div>
-
-    <div class="recorderWrap noprint">
-      <div class="recorderRing" id="recorderRing">
-        <svg viewBox="0 0 200 200">
-          <circle class="track" cx="100" cy="100" r="90"></circle>
-          <circle class="progress" id="progressCircle" cx="100" cy="100" r="90" stroke-dasharray="565.5" stroke-dashoffset="565.5"></circle>
-        </svg>
-        <button class="recBtn" id="tapBtn">
-          <span class="pawIcon">🐾</span>
-          <span class="bigCount" id="tapCount">0</span>
-          <span class="capLabel" id="tapCapLabel">แตะทุกจังหวะหายใจ</span>
-        </button>
-      </div>
-
-      <div class="durChips" id="durChips">
-        <button class="durChip" data-v="15">15วิ×4</button>
-        <button class="durChip on" data-v="30">30วิ×2</button>
-        <button class="durChip" data-v="60">60วิ</button>
-      </div>
-
-      <div class="resultLine">ผลลัพธ์ <b id="tapRate">–</b> ครั้ง/นาที</div>
-
-      <div class="recActions">
-        <button class="btn ghost" onclick="resetTap()">↺ รีเซ็ต</button>
-        <button class="btn mint" onclick="useTap()">💾 บันทึกลงตอนนี้</button>
-      </div>
-    </div>
-
-    <div class="row noprint" style="margin-top:18px">
-      <div><label>วันที่</label><input type="date" id="rDate"></div>
-      <div><label>เวลา</label><input type="time" id="rTime"></div>
-      <div><label>RRR (ครั้ง/นาที)</label><input type="number" id="rVal" min="5" max="120" placeholder="เช่น 28"></div>
-      <div style="flex:1.5 1 220px"><label>บันทึกอาการ</label><input id="rNote" placeholder="เช่น ไอ / หอบ / กินยาแล้ว"></div>
-      <div style="flex:0 0 auto"><button class="btn" onclick="addRRR()">บันทึก</button></div>
-    </div>
-    <div id="rrrChart" style="margin-top:14px"></div>
-    <div class="legend">
-      <span><i class="dot" style="background:var(--mint-d)"></i>RRR</span>
-      <span><i class="dot" style="background:var(--okbg);border:1px solid var(--ok)"></i>ปกติ &lt;30</span>
-      <span><i class="dot" style="background:var(--warnbg);border:1px solid var(--warn)"></i>เฝ้าระวัง 30–45</span>
-      <span><i class="dot" style="background:var(--badbg);border:1px solid var(--bad)"></i>ผิดปกติ &gt;45</span>
-      <span><i class="dot" style="background:var(--pink-d)"></i>เฉลี่ย 7 วัน</span>
-    </div>
-
-    <div class="scroll" style="margin-top:14px;max-height:280px;overflow-y:auto">
-      <table><thead><tr><th>วันที่</th><th>เวลา</th><th>RRR</th><th>สถานะ</th><th>บันทึก</th><th class="noprint"></th></tr></thead><tbody id="rrrBody"></tbody></table>
-    </div>
-  </div>
-
-  <!-- LABS (weight merged in as a tab) -->
-  <div class="card">
-    <h2>🧪 ผลตรวจ – น้ำหนัก / ค่าไต / ตับ</h2>
-    <div class="hint">เส้นประ = ค่าอ้างอิง Lower–Upper (แถบเขียว = ช่วงปกติ) · ค่าอ้างอิงอาจต่างกันตามแล็บของแต่ละคลินิก · ไอคอน 📝 ในกราฟ = มีบันทึกเหตุการณ์วันนั้น (เช่น ฉีดยาขับน้ำ) · กราฟแสดงทุกครั้งที่มีการบันทึกทั้งหมด</div>
-    <div class="tabs" id="labTabs"></div>
-    <div id="labChart"></div>
-    <div class="scroll" style="margin-top:14px">
-      <table id="labTable"></table>
-    </div>
-
-    <div class="ocrBox noprint">
-      <div class="ocrIcon">📷</div>
-      <div class="ocrText">
-        <b>อ่านค่าจากรูปผลตรวจ (OCR)</b><br>
-        ถ่ายรูปหรืออัปโหลดใบผลแล็บ ระบบจะพยายามอ่านค่า Creatinine / BUN / ALT / น้ำหนัก ให้อัตโนมัติ (กรุณาตรวจสอบความถูกต้องก่อนบันทึกเสมอ)
-      </div>
-      <button class="btn mint" onclick="document.getElementById('ocrFile').click()">เลือกรูป</button>
-      <input type="file" id="ocrFile" accept="image/*" capture="environment" style="display:none" onchange="handleOcrUpload(this)">
-      <div class="ocrPreviewRow" id="ocrPreviewRow" style="display:none">
-        <img id="ocrThumb" class="ocrThumb" alt="preview">
-        <div id="ocrStatus" class="ocrStatus"></div>
-      </div>
-    </div>
-
-    <div class="row noprint" id="labFormArea" style="margin-top:14px">
-      <div><label>วันที่ตรวจ</label><input type="date" id="lDate"></div>
-      <div><label>น้ำหนัก (kg)</label><input type="number" step="0.01" id="l_wt"></div>
-      <div><label>Creatinine</label><input type="number" step="0.01" id="l_cre"></div>
-      <div><label>BUN</label><input type="number" step="0.1" id="l_bun"></div>
-      <div><label>ALT/GPT</label><input type="number" step="0.1" id="l_alt"></div>
-    </div>
-    <div class="row noprint" style="margin-top:10px">
-      <div style="flex:2 1 260px">
-        <label>📝 หมายเหตุวันนี้ (เช่น ฉีดยาขับน้ำ, งดน้ำก่อนเจาะเลือด, ปรับยา)</label>
-        <input id="l_note" placeholder="เช่น ฉีด Lasix เช้านี้ก่อนเจาะเลือด">
-      </div>
-      <div style="flex:0 0 auto;display:flex;gap:8px">
-        <button class="btn ghost" id="labCancelEditBtn" style="display:none" onclick="cancelEditLab()">ยกเลิกแก้ไข</button>
-        <button class="btn" id="labSubmitBtn" onclick="addLab()">บันทึกผล</button>
-      </div>
-    </div>
-    <div class="muted" style="margin-top:8px">เพิ่มช่องอื่นได้ เช่น SDMA, Phosphorus, K+, PCV, ความดัน — บอกผมได้ครับ</div>
-  </div>
-
-  <!-- TOOLS -->
-  <div class="card noprint">
-    <h2>💾 ข้อมูล &amp; การใช้งาน</h2>
-    <div class="hint">ข้อมูลเก็บบน Firestore ภายใต้ "รหัสครอบครัว" ของคุณ และแคชไว้ในเครื่องด้วย — แนะนำ Export เก็บสำรองเป็นระยะ</div>
-    <div class="row">
-      <div style="flex:0 0 auto"><button class="btn ghost" onclick="exportJSON()">⬇️ Export JSON</button></div>
-      <div style="flex:0 0 auto"><button class="btn ghost" onclick="exportCSV()">⬇️ Export CSV</button></div>
-      <div style="flex:0 0 auto"><button class="btn ghost" onclick="document.getElementById('imp').click()">⬆️ Import JSON</button></div>
-      <div style="flex:0 0 auto"><button class="btn ghost" onclick="window.print()">🖨️ พิมพ์ / PDF ให้หมอ</button></div>
-      <div style="flex:0 0 auto"><button class="btn danger" onclick="if(confirm('ล้างข้อมูลในเครื่องนี้? (ข้อมูลบน cloud จะไม่หาย)')){localStorage.removeItem(KEY);location.reload()}">ล้างข้อมูลในเครื่อง</button></div>
-      <input type="file" id="imp" accept=".json" style="display:none" onchange="importJSON(this)">
-    </div>
-  </div>
-
-  <footer>
-    เครื่องมือนี้ใช้เพื่อ<b>ติดตามแนวโน้ม</b>เท่านั้น ไม่ใช่การวินิจฉัยทางการแพทย์<br>
-    หาก RRR &gt; 45 ครั้ง/นาที ต่อเนื่อง หรือหายใจอ้าปาก/เหงือกซีดม่วง/ขาหลังอ่อนแรงเฉียบพลัน → <b>พบสัตวแพทย์ฉุกเฉินทันที</b>
-  </footer>
 </div>
 </div><!-- /appRoot -->
+
+<!-- BOTTOM NAV (mobile) -->
+<nav class="bottomNav noprint" id="bottomNav">
+  <button class="bnItem on" data-page="home" onclick="showPage('home')"><span class="ic">🏠</span>หน้าแรก</button>
+  <button class="bnItem" data-page="echo" onclick="showPage('echo')"><span class="ic">🫀</span>หัวใจ</button>
+  <button class="bnItem" data-page="rrr" onclick="showPage('rrr')"><span class="ic">🫁</span>หายใจ</button>
+  <button class="bnItem" data-page="meds" onclick="showPage('meds')"><span class="ic">💊</span>ยา</button>
+  <button class="bnItem" data-page="labs" onclick="showPage('labs')"><span class="ic">🧪</span>ผลเลือด</button>
+</nav>
 
 <!-- Firebase SDK (compat) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>

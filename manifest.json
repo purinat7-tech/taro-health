@@ -1,11 +1,11 @@
 {
-  "name": "สมุดสุขภาพทาโร่ - Kidney & Heart Tracker",
+  "name": "Taro Health - Kidney & Heart Tracker",
   "short_name": "Taro Health",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#FFF8F0",
-  "theme_color": "#FFF8F0",
+  "background_color": "#F3F4FC",
+  "theme_color": "#F3F4FC",
   "orientation": "portrait",
   "icons": [
     { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },

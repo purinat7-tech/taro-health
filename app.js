@@ -3,6 +3,28 @@ const PIN_KEY='taro_family_docid_v1';
 const EM_SEEN_KEY='taro_em_seen_v1';
 const RRR_DANGER=45;
 
+/* ============================================================
+   PAGE NAVIGATION (sidebar / bottom nav / topbar title)
+   ============================================================ */
+const PAGE_TITLES={
+  home:'ภาพรวม', vet:'คลินิก / รพ.สัตว์', echo:'หัวใจ (Echo)',
+  meds:'ยาที่ใช้ประจำ', rrr:'การหายใจ (RRR)', labs:'ผลเลือด / น้ำหนัก', tools:'ข้อมูล & การใช้งาน'
+};
+function showPage(name){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  const target=document.getElementById('page-'+name);
+  if(target) target.classList.add('on');
+  document.querySelectorAll('.navItem[data-page]').forEach(b=>b.classList.toggle('on', b.dataset.page===name));
+  document.querySelectorAll('.bnItem[data-page]').forEach(b=>b.classList.toggle('on', b.dataset.page===name));
+  const titleEl=document.getElementById('pageTitleText');
+  if(titleEl) titleEl.textContent=PAGE_TITLES[name]||name;
+  closeSidebar();
+  window.scrollTo({top:0,behavior:'instant'});
+  const pc=document.querySelector('.pageContent'); if(pc) pc.scrollTop=0;
+}
+function openSidebar(){ document.getElementById('sidebar').classList.add('open'); document.getElementById('sideOverlay').classList.add('show'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('sideOverlay').classList.remove('show'); }
+
 /* LABS = reference-range fields (excludes weight, which has no lo/hi and is handled specially) */
 const LABS=[
   {k:'cre',n:'Creatinine',u:'mg/dL',lo:0.4,hi:2.3},
@@ -74,7 +96,7 @@ function renderVetCards(){
         ${badge}
       </div>
       <div class="vetActions">
-        <a class="btn mint" href="${v.mapUrl}" target="_blank" rel="noopener">🗺️ เปิดแผนที่นำทาง</a>
+        <a class="btn accent" href="${v.mapUrl}" target="_blank" rel="noopener">🗺️ เปิดแผนที่นำทาง</a>
         <a class="btn ghost" href="tel:${v.phone}">📞 โทร ${v.phoneDisplay}</a>
       </div>
     </div>`;
@@ -141,7 +163,7 @@ document.getElementById('lDate').value=iso(Date.now());
 document.getElementById('e_date').value=iso(Date.now());
 document.getElementById('m_start').value=iso(Date.now());
 
-const COL={mint:'#3AAE71',pink:'#FF7A9A',ok:'#34C77B',okBg:'rgba(52,199,123,.14)',warn:'#F5A623',warnBg:'rgba(245,166,35,.14)',bad:'#FF6B6B',badBg:'rgba(255,107,107,.14)',grid:'#EEE3D2',dim:'#B5A794',ink:'#2B2A28',note:'#B48CE0',wt:'#F0B457'};
+const COL={mint:'#4C6FFF',pink:'#8C6CE0',ok:'#17B978',okBg:'rgba(23,185,120,.14)',warn:'#F5A623',warnBg:'rgba(245,166,35,.14)',bad:'#F5455C',badBg:'rgba(245,69,92,.14)',grid:'#E8EAF6',dim:'#8B90A8',ink:'#1B1E2B',note:'#8C6CE0',wt:'#F0A93F'};
 
 function rrrStat(v){return v<30?['ปกติ','p-ok']:v<=45?['เฝ้าระวัง','p-warn']:['ผิดปกติ','p-bad']}
 function labStat(l,v){
@@ -264,7 +286,7 @@ function render(){
 
   /* ---- KPI cards ---- */
   const k=[];
-  if(lr){const[t,c]=rrrStat(lr.v);k.push(`<div class="kpi"><div class="lab">RRR ล่าสุด (${fmtD(lr.d)} ${lr.t})</div><div class="val">${lr.v}<span style="font-size:13px;color:var(--dim);font-weight:600"> /นาที</span></div><span class="pill ${c}">${t}</span> <span class="muted">เฉลี่ย 7 ค่า ${avg7}</span></div>`)}
+  if(lr){const[t,c]=rrrStat(lr.v);k.push(`<div class="kpi primary"><div class="lab">RRR ล่าสุด (${fmtD(lr.d)} ${lr.t})</div><div class="val">${lr.v}<span style="font-size:13px;font-weight:600"> /นาที</span></div><span class="pill ${c}">${t}</span> <span class="muted" style="color:rgba(255,255,255,.78)">เฉลี่ย 7 ค่า ${avg7}</span></div>`)}
   else k.push(`<div class="kpi"><div class="lab">RRR ล่าสุด</div><div class="val">–</div></div>`);
 
   LABS.forEach(l=>{
@@ -470,7 +492,6 @@ function renderMeds(){
   sel.innerHTML='<option value="">— ไม่เชื่อม —</option>'+echoDates.map(d=>`<option value="${d}">${d}</option>`).join('');
   sel.value=curVal;
 
-  // Show active medications first (sorted by start date desc), then stopped ones below
   const M=DB.meds.slice();
   const active=M.filter(x=>x.status!=='stopped').sort((a,b)=>a.startDate<b.startDate?1:-1);
   const stopped=M.filter(x=>x.status==='stopped').sort((a,b)=>a.startDate<b.startDate?1:-1);
@@ -719,10 +740,9 @@ if(fbReady()){
   db.enablePersistence({synchronizeTabs:true}).catch(()=>{});
 }else{
   document.getElementById('authModal').innerHTML =
-    '<div class="modalBox"><div class="modalBody" style="background:var(--card);border-radius:28px;padding:28px 22px;box-shadow:var(--shadow)">'+
-    '<h3>⚠️ ยังไม่ได้ตั้งค่า Firebase</h3>'+
+    '<div class="modalBox"><div class="modalBody"><h3 style="color:var(--ink)">⚠️ ยังไม่ได้ตั้งค่า Firebase</h3>'+
     '<p>เปิดไฟล์ <code>firebase-config.js</code> แล้วใส่ค่าจาก Firebase Console ของคุณ ดูขั้นตอนใน README.md</p>'+
-    '<button class="btn mint" style="width:100%" onclick="location.reload()">ลองใหม่</button></div></div>';
+    '<button class="btn accent" style="width:100%" onclick="location.reload()">ลองใหม่</button></div></div>';
 }
 
 function togglePinVisibility(){ pinInput.type = document.getElementById('pinShowChk').checked ? 'text' : 'password'; }
@@ -775,7 +795,7 @@ async function doEnter(){
       ? 'ยังไม่ได้เปิดใช้ Anonymous sign-in ใน Firebase Console (ดู README)'
       : (e.message||'เชื่อมต่อไม่สำเร็จ ลองใหม่อีกครั้ง');
   }
-  authSubmit.disabled=false; authSubmit.textContent='🐾 เข้าใช้งาน';
+  authSubmit.disabled=false; authSubmit.textContent='เข้าใช้งาน';
 }
 function doLeave(){
   if(!confirm('ออกจากอุปกรณ์นี้? ครั้งหน้าจะต้องใส่รหัสครอบครัวใหม่ (ข้อมูลบน cloud ไม่หาย)'))return;
