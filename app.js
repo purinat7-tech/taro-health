@@ -26,8 +26,7 @@ const ECHO_PARAMS=[
 ];
 const DIAG_LABELS={normal:'ปกติ',hcm:'HCM',hcm_phenotype:'HCM phenotype',rcm:'RCM',dcm:'DCM',arvc:'ARVC',hcm_endstage:'HCM ระยะท้าย'};
 const RISK_LABELS={low:'ต่ำ',moderate:'ปานกลาง',high:'สูง'};
-const ACTION_LABELS={start:'เริ่มยาใหม่',adjust:'ปรับขนาด',stop:'หยุดยา'};
-const ACTION_CLASS={start:'p-ok',adjust:'p-warn',stop:'p-bad'};
+const MED_STATUS_LABELS={active:'กำลังใช้อยู่',stopped:'หยุดแล้ว'};
 
 /* ---------- Vet clinics (Rayong) ---------- */
 const VETS={
@@ -87,7 +86,8 @@ function renderVetCards(){
   document.getElementById('vetCards').innerHTML=html;
 }
 
-/* ---------- Seed data ---------- */
+/* ---------- Seed data ----------
+   NOTE: medication schema (v2): { id, drug, dose, freq, times, startDate, status, stopDate, linkedEcho, note } */
 const SEED={
   labs:[
     {d:'2026-08-23',wt:4.8,cre:null,bun:null,alt:null,note:''},
@@ -113,6 +113,23 @@ DB.labs.forEach(x=>{ if(x.note==null) x.note=''; });
 if(!DB.echo) DB.echo=[];
 if(!DB.meds) DB.meds=[];
 
+/* Migrate any OLD medication log entries (schema v1: {d, action, dose, linkedEcho, note})
+   into the NEW "current medications" schema so existing data never breaks or disappears. */
+function migrateMedsSchema(){
+  DB.meds = DB.meds.map(x=>{
+    if(x.startDate!==undefined) return x; // already new schema
+    return {
+      id: x.id || ('m'+Math.random().toString(36).slice(2,9)),
+      drug: x.drug||'', dose: x.dose||'', freq:'', times:'',
+      startDate: x.d || iso(Date.now()),
+      status: x.action==='stop' ? 'stopped' : 'active',
+      stopDate: x.action==='stop' ? (x.d||'') : '',
+      linkedEcho: x.linkedEcho||'', note: x.note||''
+    };
+  });
+}
+migrateMedsSchema();
+
 const iso=d=>new Date(d).toISOString().slice(0,10);
 const nowTime=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
 const fmtD=s=>{const[y,m,d]=s.split('-');return d+'/'+m};
@@ -122,7 +139,7 @@ document.getElementById('rDate').value=iso(Date.now());
 document.getElementById('rTime').value=nowTime();
 document.getElementById('lDate').value=iso(Date.now());
 document.getElementById('e_date').value=iso(Date.now());
-document.getElementById('m_date').value=iso(Date.now());
+document.getElementById('m_start').value=iso(Date.now());
 
 const COL={mint:'#3AAE71',pink:'#FF7A9A',ok:'#34C77B',okBg:'rgba(52,199,123,.14)',warn:'#F5A623',warnBg:'rgba(245,166,35,.14)',bad:'#FF6B6B',badBg:'rgba(255,107,107,.14)',grid:'#EEE3D2',dim:'#B5A794',ink:'#2B2A28',note:'#B48CE0',wt:'#F0B457'};
 
@@ -146,8 +163,18 @@ function echoStat(p, v){
 }
 function riskLabel(v){ return RISK_LABELS[v]||v||''; }
 function diagnosisLabel(x){ return x.diag==='other' ? (x.diagOther||'อื่นๆ') : (DIAG_LABELS[x.diag]||''); }
-function actionLabel(a){ return ACTION_LABELS[a]||a; }
-function actionClass(a){ return ACTION_CLASS[a]||''; }
+function medStatusLabel(s){ return MED_STATUS_LABELS[s]||s; }
+function medStatusClass(s){ return s==='active'?'p-ok':'p-off'; }
+
+/* quick-fill helper: suggest common clock times when user picks a frequency preset */
+function suggestTimesForFreq(){
+  const f=document.getElementById('m_freq').value.trim();
+  const timesEl=document.getElementById('m_times');
+  if(timesEl.value.trim()) return; // don't overwrite something the user already typed
+  if(f.includes('1 ครั้ง')) timesEl.value='08:00';
+  else if(f.includes('2 ครั้ง')) timesEl.value='08:00, 20:00';
+  else if(f.includes('3 ครั้ง')) timesEl.value='08:00, 14:00, 20:00';
+}
 
 /* find the most recent entry that actually has a value for `field` (skips gaps) */
 function lastNonNull(field){
@@ -230,7 +257,6 @@ function render(){
   DB.labs.sort((a,b)=>a.d<b.d?-1:1);
   DB.rrr.sort((a,b)=>(a.d+a.t)<(b.d+b.t)?-1:1);
   DB.echo.sort((a,b)=>a.d<b.d?-1:1);
-  DB.meds.sort((a,b)=>a.d<b.d?-1:1);
   const L=DB.labs,R=DB.rrr,E=DB.echo;
   const lr=R[R.length-1];
   const lastEcho=E[E.length-1];
@@ -434,7 +460,8 @@ function cancelEditEcho(resetDate){
 }
 
 /* ============================================================
-   MEDICATION LOG — render + CRUD
+   CURRENT MEDICATIONS — render + CRUD
+   Schema: { id, drug, dose, freq, times, startDate, status:'active'|'stopped', stopDate, linkedEcho, note }
    ============================================================ */
 function renderMeds(){
   const echoDates=DB.echo.slice().sort((a,b)=>a.d<b.d?1:(a.d>b.d?-1:0)).map(x=>x.d);
@@ -443,13 +470,20 @@ function renderMeds(){
   sel.innerHTML='<option value="">— ไม่เชื่อม —</option>'+echoDates.map(d=>`<option value="${d}">${d}</option>`).join('');
   sel.value=curVal;
 
-  const M=DB.meds.slice().sort((a,b)=>a.d<b.d?1:(a.d>b.d?-1:0));
-  let html=`<thead><tr><th>วันที่</th><th>ชื่อยา</th><th>ขนาด/ความถี่</th><th>การกระทำ</th><th>เชื่อม Echo</th><th style="text-align:left">หมายเหตุ</th><th class="noprint"></th></tr></thead><tbody>`;
-  if(!M.length){
-    html+='<tr><td colspan="7" class="muted">ยังไม่มีประวัติการให้ยา</td></tr>';
+  // Show active medications first (sorted by start date desc), then stopped ones below
+  const M=DB.meds.slice();
+  const active=M.filter(x=>x.status!=='stopped').sort((a,b)=>a.startDate<b.startDate?1:-1);
+  const stopped=M.filter(x=>x.status==='stopped').sort((a,b)=>a.startDate<b.startDate?1:-1);
+  const ordered=[...active,...stopped];
+
+  let html=`<thead><tr><th>ชื่อยา</th><th>ขนาด</th><th>ความถี่</th><th>เวลาที่กิน</th><th>เริ่มกิน</th><th>สถานะ</th><th>เชื่อม Echo</th><th style="text-align:left">หมายเหตุ</th><th class="noprint"></th></tr></thead><tbody>`;
+  if(!ordered.length){
+    html+='<tr><td colspan="9" class="muted">ยังไม่มีรายการยาที่ใช้ประจำ</td></tr>';
   }else{
-    M.forEach(x=>{
-      html+=`<tr><td>${x.d}</td><td style="text-align:left">${escapeHtml(x.drug)}</td><td>${escapeHtml(x.dose)||'-'}</td><td><span class="pill ${actionClass(x.action)}">${actionLabel(x.action)}</span></td><td>${x.linkedEcho||'-'}</td><td style="text-align:left;white-space:normal">${escapeHtml(x.note)||'-'}</td><td class="noprint"><div class="rowActions"><button class="btn editbtn sm" onclick="editMed('${x.id}')">แก้ไข</button><button class="btn danger" onclick="delMed('${x.id}')">ลบ</button></div></td></tr>`;
+    ordered.forEach(x=>{
+      const rowCls = x.status==='stopped' ? ' class="stoppedRow"' : '';
+      const stopInfo = x.status==='stopped' && x.stopDate ? ` (${x.stopDate})` : '';
+      html+=`<tr${rowCls}><td style="text-align:left">${escapeHtml(x.drug)}</td><td>${escapeHtml(x.dose)||'-'}</td><td>${escapeHtml(x.freq)||'-'}</td><td>${escapeHtml(x.times)||'-'}</td><td>${x.startDate||'-'}</td><td><span class="pill ${medStatusClass(x.status)}">${medStatusLabel(x.status)}${stopInfo}</span></td><td>${x.linkedEcho||'-'}</td><td style="text-align:left;white-space:normal">${escapeHtml(x.note)||'-'}</td><td class="noprint"><div class="rowActions"><button class="btn editbtn sm" onclick="editMed('${x.id}')">แก้ไข</button><button class="btn danger" onclick="delMed('${x.id}')">ลบ</button></div></td></tr>`;
     });
   }
   html+='</tbody>';
@@ -458,20 +492,25 @@ function renderMeds(){
 
 let editingMedId=null;
 function addMed(){
-  const d=document.getElementById('m_date').value;
   const drug=document.getElementById('m_drug').value.trim();
-  if(!d||!drug) return alert('กรอกวันที่และชื่อยา');
+  const startDate=document.getElementById('m_start').value;
+  if(!drug||!startDate) return alert('กรอกชื่อยาและวันที่เริ่มกิน');
+  const status=document.getElementById('m_status').value;
   const o={
     id: editingMedId || ('m'+Date.now()+Math.random().toString(36).slice(2,7)),
-    d, drug, dose:document.getElementById('m_dose').value.trim(),
-    action:document.getElementById('m_action').value,
+    drug, dose:document.getElementById('m_dose').value.trim(),
+    freq:document.getElementById('m_freq').value.trim(),
+    times:document.getElementById('m_times').value.trim(),
+    startDate, status,
+    stopDate: status==='stopped' ? document.getElementById('m_stopDate').value : '',
     linkedEcho:document.getElementById('m_linkedEcho').value,
     note:document.getElementById('m_note').value.trim()
   };
   const i=DB.meds.findIndex(x=>x.id===o.id);
   i>=0?DB.meds[i]=o:DB.meds.push(o);
-  ['m_drug','m_dose','m_note'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('m_action').value='start';
+  ['m_drug','m_dose','m_freq','m_times','m_note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m_status').value='active';
+  document.getElementById('m_stopWrap').style.display='none';
   document.getElementById('m_linkedEcho').value='';
   cancelEditMed(false);
   save(); render();
@@ -484,20 +523,25 @@ function delMed(id){
 function editMed(id){
   const rec=DB.meds.find(x=>x.id===id); if(!rec)return;
   editingMedId=id;
-  document.getElementById('m_date').value=rec.d;
   document.getElementById('m_drug').value=rec.drug;
   document.getElementById('m_dose').value=rec.dose||'';
-  document.getElementById('m_action').value=rec.action||'start';
+  document.getElementById('m_freq').value=rec.freq||'';
+  document.getElementById('m_times').value=rec.times||'';
+  document.getElementById('m_start').value=rec.startDate||iso(Date.now());
+  document.getElementById('m_status').value=rec.status||'active';
+  document.getElementById('m_stopWrap').style.display = rec.status==='stopped'?'block':'none';
+  document.getElementById('m_stopDate').value=rec.stopDate||'';
   document.getElementById('m_linkedEcho').value=rec.linkedEcho||'';
   document.getElementById('m_note').value=rec.note||'';
   document.getElementById('medSubmitBtn').textContent='💾 บันทึกการแก้ไข';
   document.getElementById('medCancelEditBtn').style.display='inline-flex';
+  document.getElementById('m_drug').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function cancelEditMed(resetDate){
   editingMedId=null;
   document.getElementById('medSubmitBtn').textContent='บันทึก';
   document.getElementById('medCancelEditBtn').style.display='none';
-  if(resetDate!==false) document.getElementById('m_date').value=iso(Date.now());
+  if(resetDate!==false) document.getElementById('m_start').value=iso(Date.now());
 }
 
 /* ---------- RRR actions ---------- */
@@ -646,7 +690,9 @@ function exportCSV(){
   let c='\ufeffLABS\ndate,weight,creatinine,bun,alt,note\n'+DB.labs.map(x=>[x.d,x.wt??'',x.cre??'',x.bun??'',x.alt??'','"'+(x.note||'')+'"'].join(',')).join('\n');
   c+='\n\nRRR\ndate,time,rate,status,note\n'+DB.rrr.map(x=>[x.d,x.t,x.v,rrrStat(x.v)[0],'"'+(x.note||'')+'"'].join(',')).join('\n');
   c+='\n\nECHO\ndate,vet,ivsd,laao,lafs,lvfs,lvpwd,risk,diagnosis,funcnote,fullnote,aisummary\n'+DB.echo.map(x=>[x.d,'"'+(x.vet||'')+'"',x.ivsd??'',x.laao??'',x.lafs??'',x.lvfs??'',x.lvpwd??'',riskLabel(x.risk),'"'+diagnosisLabel(x)+'"','"'+(x.funcnote||'')+'"','"'+(x.fullnote||'').replace(/"/g,'""')+'"','"'+(x.aisummary||'').replace(/"/g,'""')+'"'].join(',')).join('\n');
-  c+='\n\nMEDICATIONS\ndate,drug,dose,action,linked_echo,note\n'+DB.meds.map(x=>[x.d,'"'+x.drug+'"','"'+(x.dose||'')+'"',actionLabel(x.action),x.linkedEcho||'','"'+(x.note||'')+'"'].join(',')).join('\n');
+  c+='\n\nCURRENT_MEDICATIONS\ndrug,dose,frequency,times,start_date,status,stop_date,linked_echo,note\n'+DB.meds.map(x=>[
+    '"'+x.drug+'"','"'+(x.dose||'')+'"','"'+(x.freq||'')+'"','"'+(x.times||'')+'"',x.startDate||'',medStatusLabel(x.status),x.stopDate||'',x.linkedEcho||'','"'+(x.note||'')+'"'
+  ].join(',')).join('\n');
   dl('taro_health_'+iso(Date.now())+'.csv',c,'text/csv');
 }
 function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
@@ -657,7 +703,8 @@ function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReade
     j.labs.forEach(x=>{if(x.note==null)x.note='';});
     if(!j.echo)j.echo=[];
     if(!j.meds)j.meds=[];
-    DB=j;save();render();alert('นำเข้าสำเร็จ');
+    DB=j; migrateMedsSchema();
+    save();render();alert('นำเข้าสำเร็จ');
   }catch(err){alert('ไฟล์ไม่ถูกต้อง')}};r.readAsText(f);
 }
 
@@ -706,7 +753,7 @@ async function connectToFamily(docId){
     if(snap.exists){
       const data=snap.data();
       if(data && data.labs && data.rrr){
-        applyingRemote=true; DB=migrateRemote(data); localStorage.setItem(KEY,JSON.stringify(DB)); render(); applyingRemote=false;
+        applyingRemote=true; DB=migrateRemote(data); migrateMedsSchema(); localStorage.setItem(KEY,JSON.stringify(DB)); render(); applyingRemote=false;
         checkEmergency(!firstSnapshot);
       }
     }else{ ref.set(DB); }
