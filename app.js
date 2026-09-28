@@ -3,6 +3,10 @@ const PIN_KEY='taro_family_docid_v1';
 const EM_SEEN_KEY='taro_em_seen_v1';
 const RRR_DANGER=45;
 
+/* Refill-alert thresholds (days remaining) - adjust here if you want earlier/later warnings */
+const REFILL_WARN_DAYS=7;
+const REFILL_DANGER_DAYS=3;
+
 /* ============================================================
    PAGE NAVIGATION (sidebar / bottom nav / topbar title)
    ============================================================ */
@@ -109,7 +113,8 @@ function renderVetCards(){
 }
 
 /* ---------- Seed data ----------
-   NOTE: medication schema (v2): { id, drug, dose, freq, times, startDate, status, stopDate, linkedEcho, note } */
+   NOTE: medication schema (v3): { id, drug, dose, freq, times, startDate, status, stopDate, linkedEcho, note,
+                                    stockQty, unit, qtyPerDose, dosesPerDay, stockDate } */
 const SEED={
   labs:[
     {d:'2026-08-23',wt:4.8,cre:null,bun:null,alt:null,note:''},
@@ -135,19 +140,29 @@ DB.labs.forEach(x=>{ if(x.note==null) x.note=''; });
 if(!DB.echo) DB.echo=[];
 if(!DB.meds) DB.meds=[];
 
-/* Migrate any OLD medication log entries (schema v1: {d, action, dose, linkedEcho, note})
-   into the NEW "current medications" schema so existing data never breaks or disappears. */
+/* Migrate OLD medication schemas forward so existing data never breaks:
+   v1: {d, action, dose, linkedEcho, note}
+   v2: {id, drug, dose, freq, times, startDate, status, stopDate, linkedEcho, note}  (no stock fields)
+   v3 (current): v2 + {stockQty, unit, qtyPerDose, dosesPerDay, stockDate} */
 function migrateMedsSchema(){
   DB.meds = DB.meds.map(x=>{
-    if(x.startDate!==undefined) return x; // already new schema
-    return {
-      id: x.id || ('m'+Math.random().toString(36).slice(2,9)),
-      drug: x.drug||'', dose: x.dose||'', freq:'', times:'',
-      startDate: x.d || iso(Date.now()),
-      status: x.action==='stop' ? 'stopped' : 'active',
-      stopDate: x.action==='stop' ? (x.d||'') : '',
-      linkedEcho: x.linkedEcho||'', note: x.note||''
-    };
+    let o = x;
+    if(o.startDate===undefined){ // v1 -> v2
+      o = {
+        id: o.id || ('m'+Math.random().toString(36).slice(2,9)),
+        drug: o.drug||'', dose: o.dose||'', freq:'', times:'',
+        startDate: o.d || iso(Date.now()),
+        status: o.action==='stop' ? 'stopped' : 'active',
+        stopDate: o.action==='stop' ? (o.d||'') : '',
+        linkedEcho: o.linkedEcho||'', note: o.note||''
+      };
+    }
+    if(o.stockQty===undefined) o.stockQty=null;
+    if(o.unit===undefined) o.unit='เม็ด';
+    if(o.qtyPerDose===undefined) o.qtyPerDose=null;
+    if(o.dosesPerDay===undefined) o.dosesPerDay=null;
+    if(o.stockDate===undefined) o.stockDate=o.startDate||iso(Date.now());
+    return o;
   });
 }
 migrateMedsSchema();
@@ -156,12 +171,15 @@ const iso=d=>new Date(d).toISOString().slice(0,10);
 const nowTime=()=>{const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');};
 const fmtD=s=>{const[y,m,d]=s.split('-');return d+'/'+m};
 function escapeHtml(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function daysBetween(a,b){ return Math.round((new Date(b+'T00:00')-new Date(a+'T00:00'))/86400000); }
+function addDays(a,n){ const d=new Date(a+'T00:00'); d.setDate(d.getDate()+Math.round(n)); return iso(d); }
 document.getElementById('today').textContent=new Date().toLocaleDateString('th-TH',{day:'numeric',month:'short',year:'numeric'});
 document.getElementById('rDate').value=iso(Date.now());
 document.getElementById('rTime').value=nowTime();
 document.getElementById('lDate').value=iso(Date.now());
 document.getElementById('e_date').value=iso(Date.now());
 document.getElementById('m_start').value=iso(Date.now());
+document.getElementById('m_stockDate').value=iso(Date.now());
 
 const COL={mint:'#4C6FFF',pink:'#8C6CE0',ok:'#17B978',okBg:'rgba(23,185,120,.14)',warn:'#F5A623',warnBg:'rgba(245,166,35,.14)',bad:'#F5455C',badBg:'rgba(245,69,92,.14)',grid:'#E8EAF6',dim:'#8B90A8',ink:'#1B1E2B',note:'#8C6CE0',wt:'#F0A93F'};
 
@@ -192,10 +210,48 @@ function medStatusClass(s){ return s==='active'?'p-ok':'p-off'; }
 function suggestTimesForFreq(){
   const f=document.getElementById('m_freq').value.trim();
   const timesEl=document.getElementById('m_times');
-  if(timesEl.value.trim()) return; // don't overwrite something the user already typed
-  if(f.includes('1 ครั้ง')) timesEl.value='08:00';
-  else if(f.includes('2 ครั้ง')) timesEl.value='08:00, 20:00';
-  else if(f.includes('3 ครั้ง')) timesEl.value='08:00, 14:00, 20:00';
+  if(!timesEl.value.trim()){
+    if(f.includes('1 ครั้ง')) timesEl.value='08:00';
+    else if(f.includes('2 ครั้ง')) timesEl.value='08:00, 20:00';
+    else if(f.includes('3 ครั้ง')) timesEl.value='08:00, 14:00, 20:00';
+  }
+  suggestDosesPerDayFromTimes();
+  // "ทุก 2 วัน" doesn't fit a simple times-per-day model, so nudge dosesPerDay directly
+  if(f.includes('ทุก 2 วัน')) document.getElementById('m_dosesPerDay').value='0.5';
+}
+/* count comma-separated clock times -> auto-fill "doses per day" (still editable by user) */
+function suggestDosesPerDayFromTimes(){
+  const t=document.getElementById('m_times').value.trim();
+  const dpd=document.getElementById('m_dosesPerDay');
+  if(!t) return;
+  const count=t.split(',').map(x=>x.trim()).filter(Boolean).length;
+  if(count>0) dpd.value=count;
+}
+
+/* ============================================================
+   MEDICATION STOCK CALCULATION
+   Given a medication record, compute how much is left, how many
+   days until it runs out, and the date the owner should go refill.
+   Returns null if not enough info was entered (all stock fields optional).
+   ============================================================ */
+function medStockInfo(x, todayStr){
+  const stockQty=parseFloat(x.stockQty), qtyPerDose=parseFloat(x.qtyPerDose), dosesPerDay=parseFloat(x.dosesPerDay);
+  if(!(stockQty>0) || !(qtyPerDose>0) || !(dosesPerDay>0)) return null;
+  const perDay=qtyPerDose*dosesPerDay;
+  const anchor=x.stockDate || x.startDate;
+  if(!anchor) return null;
+  const endCap = (x.status==='stopped' && x.stopDate) ? x.stopDate : todayStr;
+  const elapsed=Math.max(0, daysBetween(anchor, endCap));
+  const consumed=elapsed*perDay;
+  const remaining=Math.max(0, stockQty-consumed);
+  const daysRemaining = remaining/perDay;
+  const runOutDate = addDays(anchor, stockQty/perDay);
+  return { perDay, remaining, daysRemaining, runOutDate, unit:x.unit||'' };
+}
+function refillUrgency(daysRemaining){
+  if(daysRemaining<=REFILL_DANGER_DAYS) return 'p-bad';
+  if(daysRemaining<=REFILL_WARN_DAYS) return 'p-warn';
+  return 'p-ok';
 }
 
 /* find the most recent entry that actually has a value for `field` (skips gaps) */
@@ -482,10 +538,10 @@ function cancelEditEcho(resetDate){
 }
 
 /* ============================================================
-   CURRENT MEDICATIONS — render + CRUD
-   Schema: { id, drug, dose, freq, times, startDate, status:'active'|'stopped', stopDate, linkedEcho, note }
+   CURRENT MEDICATIONS — render + CRUD (+ stock/refill calculation)
    ============================================================ */
 function renderMeds(){
+  const today=iso(Date.now());
   const echoDates=DB.echo.slice().sort((a,b)=>a.d<b.d?1:(a.d>b.d?-1:0)).map(x=>x.d);
   const sel=document.getElementById('m_linkedEcho');
   const curVal=sel.value;
@@ -493,22 +549,63 @@ function renderMeds(){
   sel.value=curVal;
 
   const M=DB.meds.slice();
-  const active=M.filter(x=>x.status!=='stopped').sort((a,b)=>a.startDate<b.startDate?1:-1);
+  const active=M.filter(x=>x.status!=='stopped');
   const stopped=M.filter(x=>x.status==='stopped').sort((a,b)=>a.startDate<b.startDate?1:-1);
+
+  /* Active meds: soonest-to-run-out first (so the most urgent refill is always at the top);
+     meds without enough stock info to calculate fall back to newest-started-first. */
+  active.sort((a,b)=>{
+    const sa=medStockInfo(a,today), sb=medStockInfo(b,today);
+    if(sa && sb) return sa.daysRemaining-sb.daysRemaining;
+    if(sa && !sb) return -1;
+    if(!sa && sb) return 1;
+    return a.startDate<b.startDate?1:-1;
+  });
   const ordered=[...active,...stopped];
 
-  let html=`<thead><tr><th>ชื่อยา</th><th>ขนาด</th><th>ความถี่</th><th>เวลาที่กิน</th><th>เริ่มกิน</th><th>สถานะ</th><th>เชื่อม Echo</th><th style="text-align:left">หมายเหตุ</th><th class="noprint"></th></tr></thead><tbody>`;
+  let html=`<thead><tr><th>ชื่อยา</th><th>ขนาด</th><th>ความถี่</th><th>เวลาที่กิน</th><th>เริ่มกิน</th><th>สถานะ</th><th>คงเหลือ</th><th>ควรเบิกก่อน</th><th>เชื่อม Echo</th><th style="text-align:left">หมายเหตุ</th><th class="noprint"></th></tr></thead><tbody>`;
   if(!ordered.length){
-    html+='<tr><td colspan="9" class="muted">ยังไม่มีรายการยาที่ใช้ประจำ</td></tr>';
+    html+='<tr><td colspan="11" class="muted">ยังไม่มีรายการยาที่ใช้ประจำ</td></tr>';
   }else{
     ordered.forEach(x=>{
       const rowCls = x.status==='stopped' ? ' class="stoppedRow"' : '';
       const stopInfo = x.status==='stopped' && x.stopDate ? ` (${x.stopDate})` : '';
-      html+=`<tr${rowCls}><td style="text-align:left">${escapeHtml(x.drug)}</td><td>${escapeHtml(x.dose)||'-'}</td><td>${escapeHtml(x.freq)||'-'}</td><td>${escapeHtml(x.times)||'-'}</td><td>${x.startDate||'-'}</td><td><span class="pill ${medStatusClass(x.status)}">${medStatusLabel(x.status)}${stopInfo}</span></td><td>${x.linkedEcho||'-'}</td><td style="text-align:left;white-space:normal">${escapeHtml(x.note)||'-'}</td><td class="noprint"><div class="rowActions"><button class="btn editbtn sm" onclick="editMed('${x.id}')">แก้ไข</button><button class="btn danger" onclick="delMed('${x.id}')">ลบ</button></div></td></tr>`;
+      const stock = x.status!=='stopped' ? medStockInfo(x, today) : null;
+      let remainCell='-', refillCell='-';
+      if(stock){
+        const urgCls=refillUrgency(stock.daysRemaining);
+        remainCell = `<span class="pill ${urgCls}">${stock.remaining.toFixed(stock.remaining<10?2:0)} ${escapeHtml(stock.unit)}</span>`;
+        refillCell = `<span class="pill ${urgCls}">${stock.runOutDate} <span class="muted" style="color:inherit">(~${Math.max(0,Math.floor(stock.daysRemaining))}วัน)</span></span>`;
+      }
+      html+=`<tr${rowCls}><td style="text-align:left">${escapeHtml(x.drug)}</td><td>${escapeHtml(x.dose)||'-'}</td><td>${escapeHtml(x.freq)||'-'}</td><td>${escapeHtml(x.times)||'-'}</td><td>${x.startDate||'-'}</td><td><span class="pill ${medStatusClass(x.status)}">${medStatusLabel(x.status)}${stopInfo}</span></td><td>${remainCell}</td><td>${refillCell}</td><td>${x.linkedEcho||'-'}</td><td style="text-align:left;white-space:normal">${escapeHtml(x.note)||'-'}</td><td class="noprint"><div class="rowActions"><button class="btn stockbtn sm" onclick="quickRestock('${x.id}')">🔄 เติมยา</button><button class="btn editbtn sm" onclick="editMed('${x.id}')">แก้ไข</button><button class="btn danger" onclick="delMed('${x.id}')">ลบ</button></div></td></tr>`;
     });
   }
   html+='</tbody>';
   document.getElementById('medTable').innerHTML=html;
+
+  /* ---- Refill reminder banners (Meds page + compact one on Home) ---- */
+  const urgentList = active
+    .map(x=>({x, s:medStockInfo(x, today)}))
+    .filter(o=>o.s && o.s.daysRemaining<=REFILL_WARN_DAYS)
+    .sort((a,b)=>a.s.daysRemaining-b.s.daysRemaining);
+
+  const medNavBadge=document.getElementById('medNavBadge');
+  if(urgentList.length){ medNavBadge.style.display='inline-block'; medNavBadge.textContent=urgentList.length; }
+  else{ medNavBadge.style.display='none'; }
+
+  const medsBannerEl=document.getElementById('medRefillBanner');
+  const homeBannerEl=document.getElementById('medRefillBannerHome');
+  if(urgentList.length){
+    const worst=urgentList[0];
+    const cls = worst.s.daysRemaining<=REFILL_DANGER_DAYS ? 'a-bad' : 'a-warn';
+    const itemsText = urgentList.map(o=>`<b>${escapeHtml(o.x.drug)}</b> เหลือ ${Math.max(0,Math.floor(o.s.daysRemaining))} วัน (เบิกก่อน ${o.s.runOutDate})`).join(' · ');
+    const fullBanner = `<div class="alert ${cls}">💊 <div><b>ยาใกล้หมด ${urgentList.length} รายการ</b> — ${itemsText}</div></div>`;
+    medsBannerEl.innerHTML = fullBanner;
+    homeBannerEl.innerHTML = `<div class="alert ${cls}">💊 <div><b>ยาใกล้หมด:</b> ${escapeHtml(worst.x.drug)} เหลืออีก ${Math.max(0,Math.floor(worst.s.daysRemaining))} วัน — ควรไปเบิกก่อน <b>${worst.s.runOutDate}</b>${urgentList.length>1?` (และอีก ${urgentList.length-1} รายการ ดูที่หน้า "ยาที่ใช้ประจำ")`:''}</div></div>`;
+  }else{
+    medsBannerEl.innerHTML='';
+    homeBannerEl.innerHTML='';
+  }
 }
 
 let editingMedId=null;
@@ -517,6 +614,7 @@ function addMed(){
   const startDate=document.getElementById('m_start').value;
   if(!drug||!startDate) return alert('กรอกชื่อยาและวันที่เริ่มกิน');
   const status=document.getElementById('m_status').value;
+  const g=id=>document.getElementById(id).value===''?null:+document.getElementById(id).value;
   const o={
     id: editingMedId || ('m'+Date.now()+Math.random().toString(36).slice(2,7)),
     drug, dose:document.getElementById('m_dose').value.trim(),
@@ -525,11 +623,17 @@ function addMed(){
     startDate, status,
     stopDate: status==='stopped' ? document.getElementById('m_stopDate').value : '',
     linkedEcho:document.getElementById('m_linkedEcho').value,
-    note:document.getElementById('m_note').value.trim()
+    note:document.getElementById('m_note').value.trim(),
+    stockQty:g('m_stockQty'),
+    unit:document.getElementById('m_unit').value.trim()||'เม็ด',
+    qtyPerDose:g('m_qtyPerDose'),
+    dosesPerDay:g('m_dosesPerDay'),
+    stockDate:document.getElementById('m_stockDate').value||startDate
   };
   const i=DB.meds.findIndex(x=>x.id===o.id);
   i>=0?DB.meds[i]=o:DB.meds.push(o);
-  ['m_drug','m_dose','m_freq','m_times','m_note'].forEach(id=>document.getElementById(id).value='');
+  ['m_drug','m_dose','m_freq','m_times','m_note','m_stockQty','m_qtyPerDose','m_dosesPerDay'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('m_unit').value='เม็ด';
   document.getElementById('m_status').value='active';
   document.getElementById('m_stopWrap').style.display='none';
   document.getElementById('m_linkedEcho').value='';
@@ -554,6 +658,11 @@ function editMed(id){
   document.getElementById('m_stopDate').value=rec.stopDate||'';
   document.getElementById('m_linkedEcho').value=rec.linkedEcho||'';
   document.getElementById('m_note').value=rec.note||'';
+  document.getElementById('m_stockQty').value=rec.stockQty??'';
+  document.getElementById('m_unit').value=rec.unit||'เม็ด';
+  document.getElementById('m_qtyPerDose').value=rec.qtyPerDose??'';
+  document.getElementById('m_dosesPerDay').value=rec.dosesPerDay??'';
+  document.getElementById('m_stockDate').value=rec.stockDate||rec.startDate||iso(Date.now());
   document.getElementById('medSubmitBtn').textContent='💾 บันทึกการแก้ไข';
   document.getElementById('medCancelEditBtn').style.display='inline-flex';
   document.getElementById('m_drug').scrollIntoView({behavior:'smooth',block:'center'});
@@ -562,7 +671,23 @@ function cancelEditMed(resetDate){
   editingMedId=null;
   document.getElementById('medSubmitBtn').textContent='บันทึก';
   document.getElementById('medCancelEditBtn').style.display='none';
-  if(resetDate!==false) document.getElementById('m_start').value=iso(Date.now());
+  if(resetDate!==false){
+    document.getElementById('m_start').value=iso(Date.now());
+    document.getElementById('m_stockDate').value=iso(Date.now());
+  }
+}
+/* Quick "refill" action: prompts for the new quantity just received, resets the stock
+   anchor date to today so future day-counting starts fresh from this refill. */
+function quickRestock(id){
+  const rec=DB.meds.find(x=>x.id===id); if(!rec)return;
+  const suggestion = rec.stockQty || '';
+  const val = prompt(`เติมสต็อกยา "${rec.drug}"\nกรอกจำนวนที่เพิ่งรับมา (${rec.unit||'เม็ด'}):`, suggestion);
+  if(val===null) return;
+  const qty=parseFloat(val);
+  if(!(qty>0)){ alert('กรุณากรอกจำนวนที่ถูกต้อง'); return; }
+  rec.stockQty=qty;
+  rec.stockDate=iso(Date.now());
+  save(); render();
 }
 
 /* ---------- RRR actions ---------- */
@@ -711,9 +836,16 @@ function exportCSV(){
   let c='\ufeffLABS\ndate,weight,creatinine,bun,alt,note\n'+DB.labs.map(x=>[x.d,x.wt??'',x.cre??'',x.bun??'',x.alt??'','"'+(x.note||'')+'"'].join(',')).join('\n');
   c+='\n\nRRR\ndate,time,rate,status,note\n'+DB.rrr.map(x=>[x.d,x.t,x.v,rrrStat(x.v)[0],'"'+(x.note||'')+'"'].join(',')).join('\n');
   c+='\n\nECHO\ndate,vet,ivsd,laao,lafs,lvfs,lvpwd,risk,diagnosis,funcnote,fullnote,aisummary\n'+DB.echo.map(x=>[x.d,'"'+(x.vet||'')+'"',x.ivsd??'',x.laao??'',x.lafs??'',x.lvfs??'',x.lvpwd??'',riskLabel(x.risk),'"'+diagnosisLabel(x)+'"','"'+(x.funcnote||'')+'"','"'+(x.fullnote||'').replace(/"/g,'""')+'"','"'+(x.aisummary||'').replace(/"/g,'""')+'"'].join(',')).join('\n');
-  c+='\n\nCURRENT_MEDICATIONS\ndrug,dose,frequency,times,start_date,status,stop_date,linked_echo,note\n'+DB.meds.map(x=>[
-    '"'+x.drug+'"','"'+(x.dose||'')+'"','"'+(x.freq||'')+'"','"'+(x.times||'')+'"',x.startDate||'',medStatusLabel(x.status),x.stopDate||'',x.linkedEcho||'','"'+(x.note||'')+'"'
-  ].join(',')).join('\n');
+  const today=iso(Date.now());
+  c+='\n\nCURRENT_MEDICATIONS\ndrug,dose,frequency,times,start_date,status,stop_date,stock_qty,unit,qty_per_dose,doses_per_day,stock_date,remaining,days_remaining,refill_by,linked_echo,note\n'+DB.meds.map(x=>{
+    const st=x.status!=='stopped'?medStockInfo(x,today):null;
+    return [
+      '"'+x.drug+'"','"'+(x.dose||'')+'"','"'+(x.freq||'')+'"','"'+(x.times||'')+'"',x.startDate||'',medStatusLabel(x.status),x.stopDate||'',
+      x.stockQty??'', x.unit||'', x.qtyPerDose??'', x.dosesPerDay??'', x.stockDate||'',
+      st?st.remaining.toFixed(2):'', st?Math.floor(st.daysRemaining):'', st?st.runOutDate:'',
+      x.linkedEcho||'', '"'+(x.note||'')+'"'
+    ].join(',');
+  }).join('\n');
   dl('taro_health_'+iso(Date.now())+'.csv',c,'text/csv');
 }
 function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();
